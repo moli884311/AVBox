@@ -1121,9 +1121,7 @@ public class PlaybackController {
                         // 取流成功,手动选线标记完成使命,后续失败恢复走正常自动策略
                         st.userPickedLine = false;
                         String danmaku = info.optString("danmaku", "").trim();
-                        lastSubscribeDanmu = danmaku;
-                        // 订阅弹幕开关关闭时忽略接口自带弹幕,直接回退到在线/平台来源
-                        if (!DanmuHelper.isSubscribeEnabled()) danmaku = "";
+                        lastDirectDanmu = danmaku;
                         final String danmuProgressKey = progressKey();
                         setWebUserAgent(null);
                         setWebHeaderMap(null);
@@ -1237,10 +1235,10 @@ public class PlaybackController {
     }
 
     /**
-     * 弹幕选源(与进度键绑定:切集后旧结果作废)。来源与开关的对应关系:
-     *  - 在线弹幕:偏好设置填写的弹幕 API(未填写则用内置在线接口)
-     *  - 订阅弹幕:偏好设置未填写时,取流结果直给地址 / 接口自带 danmaku
-     *  - 平台弹幕:内置各视频平台弹幕源(见 PlatformDanmuEngine)
+     * 弹幕选源(与进度键绑定:切集后旧结果作废)。来源顺序:
+     *  1. 取流结果直给地址(播放源自带弹幕)
+     *  2. 在线弹幕:设置里「弹幕 API」源列表按优先级逐个尝试(受在线开关控制)
+     *  3. 平台弹幕:内置各视频平台弹幕源(见 PlatformDanmuEngine)
      * 依次尝试,任一命中即停。
      */
     private void selectDanmu(String directDanmu, String key) {
@@ -1249,18 +1247,9 @@ public class PlaybackController {
             return;
         }
         final List<DanmuSource> sources = new ArrayList<>();
-        String custom = DanmakuApi.getCustomApi();
-        if (!TextUtils.isEmpty(custom)) {
-            // 填写了弹幕 API:在线弹幕就是它
-            if (DanmuHelper.isOnlineEnabled()) sources.add(DanmuSource.search(custom));
-        } else {
-            // 没填写:订阅弹幕接管(取流直给 → 接口自带),最后才是内置在线兜底
-            if (DanmuHelper.isSubscribeEnabled()) {
-                if (!TextUtils.isEmpty(directDanmu)) sources.add(DanmuSource.direct(directDanmu));
-                String iface = DanmakuApi.getInterfaceApi();
-                if (!TextUtils.isEmpty(iface)) sources.add(DanmuSource.search(iface));
-            }
-            if (DanmuHelper.isOnlineEnabled()) sources.add(DanmuSource.search(DanmakuApi.getBuiltinApi()));
+        if (!TextUtils.isEmpty(directDanmu)) sources.add(DanmuSource.direct(directDanmu));
+        if (DanmuHelper.isOnlineEnabled()) {
+            for (String api : DanmakuApi.getOnlineApiList()) sources.add(DanmuSource.search(api));
         }
         VodInfo.VodSeries series = currentSeries(vod().playFlag, vod().playIndex);
         tryDanmuSource(sources, 0, vod().name, series == null ? "" : series.name, key);
@@ -1317,7 +1306,7 @@ public class PlaybackController {
 
     /** 弹幕来源开关变更后重新按开关选源(平台来源见 PlatformDanmuEngine) */
     public void reselectDanmu() {
-        selectDanmu(lastSubscribeDanmu, progressKey());
+        selectDanmu(lastDirectDanmu, progressKey());
     }
 
     // -------------------- 解析/嗅探门面(见 PlayUrlResolver) --------------------
@@ -1711,7 +1700,7 @@ public class PlaybackController {
     /** 当前集的弹幕地址(取流结果或弹幕搜索的产物;退页面重进时页面要重新拿一份) */
     private String playDanmu;
     /** 本次取流结果里接口(订阅)自带的弹幕地址,供来源开关切换后重新选源用 */
-    private String lastSubscribeDanmu = "";
+    private String lastDirectDanmu = "";
 
     @Nullable
     public String playArtwork() {

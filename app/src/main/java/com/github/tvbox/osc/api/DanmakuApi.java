@@ -13,6 +13,7 @@ import com.github.tvbox.osc.base.App;
 import com.github.tvbox.osc.bean.DanmuSearchResult;
 import com.github.tvbox.osc.bean.SourceBean;
 import com.github.tvbox.osc.util.DanmuHelper;
+import com.github.tvbox.osc.util.DanmuSourceStore;
 import com.github.tvbox.osc.util.HawkConfig;
 import com.github.tvbox.osc.util.LOG;
 import com.github.tvbox.osc.util.LanguageManager;
@@ -438,32 +439,13 @@ public class DanmakuApi {
     }
 
     private static String getApiUrl() {
-        String custom = getCustomApi();
-        if (!TextUtils.isEmpty(custom)) return custom;
-        // 接口(订阅)自带 danmaku:仅「订阅弹幕」开关打开时作为来源,否则跳过直接落到内置
-        if (DanmuHelper.isSubscribeEnabled()) {
-            String config = getInterfaceApi();
-            if (!TextUtils.isEmpty(config)) return config;
-        }
-        return BUILTIN_API;
+        List<String> urls = getOnlineApiList();
+        return urls.isEmpty() ? "" : urls.get(0);
     }
 
-    /** 偏好设置里填写的弹幕 API(未填写/走内置时返回空) */
-    public static String getCustomApi() {
-        if (isUseDefault()) return "";
-        String custom = KV.get(HawkConfig.DANMU_API, "");
-        return custom == null ? "" : custom.trim();
-    }
-
-    /** 当前接口(订阅)自带的弹幕 API */
-    public static String getInterfaceApi() {
-        String config = ApiConfig.get().getDanmaku();
-        return config == null ? "" : config.trim();
-    }
-
-    /** 内置在线弹幕接口(兜底来源) */
-    public static String getBuiltinApi() {
-        return BUILTIN_API;
+    /** 在线弹幕接口列表(按「弹幕 API」页配置的优先级,停用项不参与) */
+    public static List<String> getOnlineApiList() {
+        return DanmuSourceStore.enabledUrls();
     }
 
     private static boolean hasPlaceholder(String apiUrl) {
@@ -476,7 +458,8 @@ public class DanmakuApi {
         return url.endsWith("/danmaku");
     }
 
-    private static String normalizeBaseUrl(String apiUrl) {
+    /** dandanplay 兼容源的基址(去掉末尾 / 与 /87654321 之类的口令后缀),测速与搜索共用 */
+    public static String normalizeBaseUrl(String apiUrl) {
         String url = apiUrl == null ? "" : apiUrl.trim();
         if (url.endsWith("/")) url = url.substring(0, url.length() - 1);
         if (url.endsWith("/87654321")) url = url.substring(0, url.length() - "/87654321".length());

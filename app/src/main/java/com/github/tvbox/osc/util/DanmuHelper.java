@@ -77,15 +77,6 @@ public class DanmuHelper {
         KV.put(HawkConfig.DANMU_SRC_PLATFORM, enabled);
     }
 
-    /** 订阅弹幕(用户接口自带弹幕)来源开关 */
-    public static boolean isSubscribeEnabled() {
-        return KV.get(HawkConfig.DANMU_SRC_SUBSCRIBE, true);
-    }
-
-    public static void setSubscribeEnabled(boolean enabled) {
-        KV.put(HawkConfig.DANMU_SRC_SUBSCRIBE, enabled);
-    }
-
     public static int randomColor() {
         int index = (int) (Math.random() * PALETTE.length);
         return Color.parseColor(PALETTE[index]);

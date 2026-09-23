@@ -80,7 +80,6 @@
     <string name="danmu_settings">彈幕設定</string>
     <string name="danmu_online">線上彈幕</string>
     <string name="danmu_platform">平台彈幕</string>
-    <string name="danmu_subscribe">訂閱彈幕</string>
     <string name="danmu_search">彈幕搜尋</string>
     <string name="danmu_color">彈幕顏色</string>
     <string name="danmu_color_random">隨機</string>
@@ -96,8 +95,18 @@
     <string name="danmu_alpha">彈幕透明</string>
     <string name="danmu_search_hint">請輸入彈幕名稱</string>
     <string name="danmu_online_subtitle">使用偏好設定裡填寫的彈幕 API</string>
-    <string name="danmu_subscribe_subtitle">未填寫彈幕 API 時，使用介面自帶彈幕</string>
     <string name="danmu_platform_subtitle">內建各影音平台彈幕來源</string>
+    <string name="danmu_api_hint">dandanplay 相容源，順序即優先級</string>
+    <string name="danmu_api_hint2">單擊一行可啟用/停用；停用項不參與自動彈幕匹配</string>
+    <string name="danmu_api_speed_test">測速</string>
+    <string name="danmu_api_speed_sort">測速排序</string>
+    <string name="danmu_api_restore_default">恢復預設</string>
+    <string name="danmu_api_add">新增彈幕來源</string>
+    <string name="danmu_api_name">名稱</string>
+    <string name="danmu_api_url">位址</string>
+    <string name="danmu_api_ms">%1$d ms</string>
+    <string name="danmu_api_timeout">逾時</string>
+    <string name="danmu_api_close">關閉</string>
     <string name="settings_danmu_subtitle">彈幕開關、來源與外觀</string>
     <string name="toast_input_empty">輸入內容不能為空</string>
     <string name="toast_danmu_not_found">未查詢到符合的彈幕</string>

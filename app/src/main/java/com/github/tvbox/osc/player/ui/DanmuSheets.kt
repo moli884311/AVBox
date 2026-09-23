@@ -66,8 +66,7 @@ fun DanmuSettingSheet(sheet: DanmuSettingSheetState, onDismiss: () -> Unit) {
 
             var online by remember { mutableStateOf(DanmuHelper.isOnlineEnabled()) }
             var platform by remember { mutableStateOf(DanmuHelper.isPlatformEnabled()) }
-            var subscribe by remember { mutableStateOf(DanmuHelper.isSubscribeEnabled()) }
-            // 来源开关变化:持久化后按 订阅→在线→平台 重新选源
+            // 来源开关变化:持久化后重新选源
             val reselect: () -> Unit = { sheet.onReselect() }
 
             SheetSwitchRow(stringResource(R.string.danmu_online), online) { on ->
@@ -88,11 +87,6 @@ fun DanmuSettingSheet(sheet: DanmuSettingSheetState, onDismiss: () -> Unit) {
             SheetSwitchRow(stringResource(R.string.danmu_platform), platform) { on ->
                 platform = on
                 DanmuHelper.setPlatformEnabled(on)
-                reselect()
-            }
-            SheetSwitchRow(stringResource(R.string.danmu_subscribe), subscribe) { on ->
-                subscribe = on
-                DanmuHelper.setSubscribeEnabled(on)
                 reselect()
             }
                 SheetLabelRow(stringResource(R.string.danmu_color)) {
