@@ -1,6 +1,7 @@
 package com.github.tvbox.osc.player;
 
 import android.content.Context;
+import android.os.SystemClock;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.Gravity;
@@ -26,8 +27,50 @@ import xyz.doikki.videoplayer.player.VideoView;
 import xyz.doikki.videoplayer.render.TextureRenderViewFactory;
 
 public class MyVideoView extends VideoView implements DrawHandler.Callback {
-    private DanmakuView danmuView;
+    private volatile DanmakuView danmuView;
     private ImageView artworkView;
+
+    /**
+     * 弹幕时间轴基准:弹幕库内部按「墙钟」推进(DrawHandler 用 SystemClock 递增 timer),
+     * 与播放器倍速无关 —— 长按加速/设置倍速时视频走 2x,弹幕仍按 1x 走,
+     * 时间轴持续错位(且只有 seekTo/重载才会重新对齐,表现为「点开设置弹幕突然变快」)。
+     * <p>
+     * 这里在主线程按固定周期采样「播放位置 + 实测倍速」作为锚点,DrawHandler 每帧回调
+     * {@link #updateTimer(DanmakuTimer)} 时用锚点线性外推,把弹幕时间轴直接拉到播放位置,
+     * 倍速、seek 都自然跟随(参见 DrawTask 按时间轴 sub 弹幕,前跳安全)。
+     */
+    private static final long DANMU_SYNC_SAMPLE_MS = 250L;
+    private static final long DANMU_SYNC_TOLERANCE_MS = 60L;
+    private static final float DANMU_SYNC_MAX_SPEED = 8f;
+    private volatile long danmuAnchorPos;
+    private volatile long danmuAnchorUptime;
+    private volatile float danmuAnchorSpeed = 1f;
+    private volatile boolean danmuClockActive;
+    private long danmuSamplePos = -1L;
+    private long danmuSampleUptime;
+
+    private final Runnable danmuClockTick = new Runnable() {
+        @Override
+        public void run() {
+            if (!danmuClockActive) return;
+            if (isPlaying()) {
+                if (danmuSamplePos < 0L) {
+                    danmuSamplePos = getCurrentPosition();
+                    danmuSampleUptime = SystemClock.uptimeMillis();
+                    danmuAnchorSpeed = 1f;
+                }
+                sampleDanmuClock();
+            } else {
+                // 缓冲/暂停中:锚点冻结在当前帧,弹幕随之停住(倍速外推速度为 0)
+                danmuSamplePos = -1L;
+                danmuAnchorSpeed = 0f;
+                danmuAnchorPos = getCurrentPosition();
+                danmuAnchorUptime = SystemClock.uptimeMillis();
+            }
+            postDelayed(this, DANMU_SYNC_SAMPLE_MS);
+        }
+    };
+
     /** 封面的在途图片请求句柄:换图/隐藏前必须先取消,否则过期海报可能盖到画面上(见 clearArtwork) */
     private coil3.request.Disposable artworkDisposable;
     private View frameCover;
@@ -267,29 +310,34 @@ public class MyVideoView extends VideoView implements DrawHandler.Callback {
     public void seekTo(long pos) {
         super.seekTo(pos);
         if (haveDanmu()) danmuView.seekTo(pos);
+        resetDanmuClock(pos);
     }
 
     @Override
     public void resume() {
         super.resume();
         if (haveDanmu()) danmuView.resume();
+        startDanmuClock();
     }
 
     @Override
     public void start() {
         super.start();
         if (haveDanmu()) danmuView.resume();
+        startDanmuClock();
     }
 
     @Override
     public void pause() {
         super.pause();
         if (haveDanmu()) danmuView.pause();
+        stopDanmuClock();
     }
 
     @Override
     public void release() {
         super.release();
+        stopDanmuClock();
         if (haveDanmu()) danmuView.release();
     }
 
@@ -312,12 +360,69 @@ public class MyVideoView extends VideoView implements DrawHandler.Callback {
             if (danmuView == null) return;
             if (isPlaying() && danmuView.isPrepared()) {
                 danmuView.start(getCurrentPosition());
+                resetDanmuClock(getCurrentPosition());
+                startDanmuClock();
             }
         });
     }
 
+    /** 主线程采样:记录播放位置与实测倍速(位置增量/时间增量),供绘制线程线性外推 */
+    private void sampleDanmuClock() {
+        long now = SystemClock.uptimeMillis();
+        long pos = getCurrentPosition();
+        if (danmuSamplePos >= 0L) {
+            long dt = now - danmuSampleUptime;
+            long dp = pos - danmuSamplePos;
+            if (dt > 0L && dp >= 0L) {
+                float speed = (float) dp / (float) dt;
+                if (speed > 0.1f && speed < DANMU_SYNC_MAX_SPEED) danmuAnchorSpeed = speed;
+            }
+        }
+        danmuSamplePos = pos;
+        danmuSampleUptime = now;
+        danmuAnchorPos = pos;
+        danmuAnchorUptime = now;
+    }
+
+    private void startDanmuClock() {
+        removeCallbacks(danmuClockTick);
+        danmuSamplePos = -1L;
+        danmuAnchorSpeed = 1f;
+        danmuAnchorPos = getCurrentPosition();
+        danmuAnchorUptime = SystemClock.uptimeMillis();
+        danmuClockActive = true;
+        postDelayed(danmuClockTick, DANMU_SYNC_SAMPLE_MS);
+    }
+
+    private void resetDanmuClock(long position) {
+        danmuSamplePos = -1L;
+        danmuAnchorSpeed = 1f;
+        danmuAnchorPos = position;
+        danmuAnchorUptime = SystemClock.uptimeMillis();
+    }
+
+    private void stopDanmuClock() {
+        removeCallbacks(danmuClockTick);
+        danmuClockActive = false;
+    }
+
+    /**
+     * 绘制线程每帧回调:把弹幕时间轴按锚点外推到「当前播放位置」。
+     * 只改 timer 不碰渲染状态,倍速下弹幕滚动随之变快、seek 后立即对齐,
+     * 也不会像 seekTo 那样重置渲染导致闪跳。
+     */
     @Override
     public void updateTimer(DanmakuTimer timer) {
+        if (!danmuClockActive || timer == null) return;
+        DanmakuView view = danmuView;
+        if (view == null || !view.isPrepared()) return;
+        long elapsed = SystemClock.uptimeMillis() - danmuAnchorUptime;
+        long target = danmuAnchorPos + (long) (elapsed * danmuAnchorSpeed);
+        if (target < 0L) target = 0L;
+        long drift = timer.currMillisecond - target;
+        if (drift > DANMU_SYNC_TOLERANCE_MS || drift < -DANMU_SYNC_TOLERANCE_MS) {
+            timer.update(target);
+        }
     }
 
     @Override

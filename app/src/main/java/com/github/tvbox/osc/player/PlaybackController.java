@@ -1261,20 +1261,23 @@ public class PlaybackController {
     private void tryDanmuSource(List<DanmuSource> sources, int index, String name, String episode, String key) {
         if (!TextUtils.equals(key, progressKey())) return;
         if (index >= sources.size()) {
+            if (!sources.isEmpty()) showDanmuTip(R.string.danmu_tip_none, name, episode);
             checkDanmu("", null);
             return;
         }
         DanmuSource source = sources.get(index);
         Runnable next = () -> tryDanmuSource(sources, index + 1, name, episode, key);
         if (source.direct) {
+            showDanmuTip(R.string.danmu_tip_direct, name, episode);
             checkDanmu(source.url, next);
             return;
         }
         if (source.platform) {
             PlatformDanmuEngine.search(name, episode, new PlatformDanmuEngine.PlatformCallback() {
                 @Override
-                public void onFound(String xml) {
+                public void onFound(String xml, String sourceName) {
                     if (!TextUtils.equals(key, progressKey())) return;
+                    showDanmuTip(R.string.danmu_tip_platform, sourceName);
                     checkDanmu(xml, null);
                 }
 
@@ -1289,6 +1292,7 @@ public class PlaybackController {
             @Override
             public void onFound(String url) {
                 if (!TextUtils.equals(key, progressKey())) return;
+                showDanmuTip(R.string.danmu_tip_online, apiHost(source.url), name, episode);
                 checkDanmu(url, null);
             }
 
@@ -1297,6 +1301,24 @@ public class PlaybackController {
                 next.run();
             }
         });
+    }
+
+    /** 弹幕来源提示(平台/在线/播放源/无结果),便于确认当前用的哪路弹幕、匹配到哪部哪集 */
+    private void showDanmuTip(int resId, Object... args) {
+        final PlaybackViewBridge bridge = view;
+        if (bridge == null) return;
+        final String text = str(resId, args);
+        bridge.runOnUi(() -> bridge.toast(text));
+    }
+
+    private static String apiHost(String url) {
+        if (TextUtils.isEmpty(url)) return "";
+        try {
+            String host = android.net.Uri.parse(url).getHost();
+            return TextUtils.isEmpty(host) ? url : host;
+        } catch (Throwable th) {
+            return url;
+        }
     }
 
     private static class DanmuSource {

@@ -37,7 +37,8 @@ import okhttp3.Response;
 public class PlatformDanmuEngine {
 
     public interface PlatformCallback {
-        void onFound(String xml);
+        /** sourceName 为命中的候选名(形如「片名 第N集 from <platform>」),用于提示用户当前弹幕来源 */
+        void onFound(String xml, String sourceName);
 
         void onNotFound();
     }
@@ -143,7 +144,7 @@ public class PlatformDanmuEngine {
                         String body = response.body() == null ? "" : response.body().string();
                         if (!isCurrent(seq)) return;
                         if (isDanmuXml(body)) {
-                            notifyFound(callback, seq, body);
+                            notifyFound(callback, seq, body, candidate.name);
                         } else {
                             next.run();
                         }
@@ -248,10 +249,11 @@ public class PlatformDanmuEngine {
         return seq == currentSeq.get();
     }
 
-    private static void notifyFound(PlatformCallback callback, int seq, String xml) {
+    private static void notifyFound(PlatformCallback callback, int seq, String xml, String sourceName) {
         if (callback == null || !isCurrent(seq)) return;
+        final String name = TextUtils.isEmpty(sourceName) ? "" : sourceName;
         handler.post(() -> {
-            if (isCurrent(seq)) callback.onFound(xml);
+            if (isCurrent(seq)) callback.onFound(xml, name);
         });
     }
 

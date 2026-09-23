@@ -96,6 +96,10 @@
     <string name="danmu_search_hint">請輸入彈幕名稱</string>
     <string name="danmu_online_subtitle">使用偏好設定裡填寫的彈幕 API</string>
     <string name="danmu_platform_subtitle">內建各影音平台彈幕來源</string>
+    <string name="danmu_tip_platform">平台彈幕 · %1$s</string>
+    <string name="danmu_tip_online">線上彈幕 · %1$s｜%2$s %3$s</string>
+    <string name="danmu_tip_direct">播放源彈幕 · %1$s %2$s</string>
+    <string name="danmu_tip_none">未找到彈幕 · %1$s %2$s</string>
     <string name="danmu_api_hint">dandanplay 相容源，順序即優先級</string>
     <string name="danmu_api_hint2">單擊一行可啟用/停用；停用項不參與自動彈幕匹配</string>
     <string name="danmu_api_speed_test">測速</string>

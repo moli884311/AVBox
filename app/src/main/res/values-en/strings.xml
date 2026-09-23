@@ -96,6 +96,10 @@
     <string name="danmu_search_hint">Enter danmaku name</string>
     <string name="danmu_online_subtitle">Use the danmaku API set in preferences</string>
     <string name="danmu_platform_subtitle">Built-in danmaku sources for video platforms</string>
+    <string name="danmu_tip_platform">Platform danmaku · %1$s</string>
+    <string name="danmu_tip_online">Online danmaku · %1$s | %2$s %3$s</string>
+    <string name="danmu_tip_direct">Source danmaku · %1$s %2$s</string>
+    <string name="danmu_tip_none">No danmaku found · %1$s %2$s</string>
     <string name="danmu_api_hint">dandanplay-compatible sources; order is priority</string>
     <string name="danmu_api_hint2">Tap a row to enable/disable; disabled sources are skipped</string>
     <string name="danmu_api_speed_test">Test</string>
