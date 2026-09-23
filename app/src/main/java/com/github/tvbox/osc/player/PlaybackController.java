@@ -22,6 +22,7 @@ import com.github.tvbox.osc.ui.player.PreloadCoordinator;
 import com.github.tvbox.osc.api.ApiConfig;
 import com.github.tvbox.osc.base.App;
 import com.github.tvbox.osc.api.DanmakuApi;
+import com.github.tvbox.osc.api.PlatformDanmuEngine;
 import com.github.tvbox.osc.util.DanmuHelper;
 import com.github.tvbox.osc.bean.ParseBean;
 import com.github.tvbox.osc.bean.SourceBean;
@@ -1251,6 +1252,7 @@ public class PlaybackController {
         if (DanmuHelper.isOnlineEnabled()) {
             for (String api : DanmakuApi.getOnlineApiList()) sources.add(DanmuSource.search(api));
         }
+        if (DanmuHelper.isPlatformEnabled()) sources.add(DanmuSource.platform());
         VodInfo.VodSeries series = currentSeries(vod().playFlag, vod().playIndex);
         tryDanmuSource(sources, 0, vod().name, series == null ? "" : series.name, key);
     }
@@ -1266,6 +1268,21 @@ public class PlaybackController {
         Runnable next = () -> tryDanmuSource(sources, index + 1, name, episode, key);
         if (source.direct) {
             checkDanmu(source.url, next);
+            return;
+        }
+        if (source.platform) {
+            PlatformDanmuEngine.search(name, episode, new PlatformDanmuEngine.PlatformCallback() {
+                @Override
+                public void onFound(String xml) {
+                    if (!TextUtils.equals(key, progressKey())) return;
+                    checkDanmu(xml, null);
+                }
+
+                @Override
+                public void onNotFound() {
+                    next.run();
+                }
+            });
             return;
         }
         DanmakuApi.searchWith(source.url, name, episode, new DanmakuApi.SearchCallback() {
@@ -1285,10 +1302,16 @@ public class PlaybackController {
     private static class DanmuSource {
         final String url;
         final boolean direct;
+        final boolean platform;
 
         DanmuSource(String url, boolean direct) {
+            this(url, direct, false);
+        }
+
+        DanmuSource(String url, boolean direct, boolean platform) {
             this.url = url;
             this.direct = direct;
+            this.platform = platform;
         }
 
         static DanmuSource search(String url) {
@@ -1297,6 +1320,10 @@ public class PlaybackController {
 
         static DanmuSource direct(String url) {
             return new DanmuSource(url, true);
+        }
+
+        static DanmuSource platform() {
+            return new DanmuSource("", false, true);
         }
     }
 

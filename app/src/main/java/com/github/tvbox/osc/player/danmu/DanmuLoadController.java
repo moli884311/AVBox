@@ -4,6 +4,7 @@ import android.text.TextUtils;
 import android.view.View;
 
 import com.github.tvbox.osc.api.DanmakuApi;
+import com.github.tvbox.osc.api.PlatformDanmuEngine;
 import com.github.tvbox.osc.player.MyVideoView;
 import com.github.tvbox.osc.player.controller.PlayerControlApi;
 import com.github.tvbox.osc.util.DanmuHelper;
@@ -125,6 +126,7 @@ public class DanmuLoadController {
 
     public void reset() {
         DanmakuApi.cancel();
+        PlatformDanmuEngine.cancel();
         temporarilyClosed = false;
         danmuText = "";
         danmuTitle = "";
@@ -139,6 +141,7 @@ public class DanmuLoadController {
 
     public void close() {
         DanmakuApi.cancel();
+        PlatformDanmuEngine.cancel();
         loadSeq.incrementAndGet();
         startedSeq = -1;
         pendingPrepare = false;
