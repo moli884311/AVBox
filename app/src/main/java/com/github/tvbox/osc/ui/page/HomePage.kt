@@ -77,7 +77,6 @@ import com.github.tvbox.osc.R
 import com.github.tvbox.osc.api.ApiConfig
 import com.github.tvbox.osc.bean.Movie
 import com.github.tvbox.osc.ui.activity.ConfigManageActivity
-import com.github.tvbox.osc.ui.activity.MoliysInterfaceActivity
 import com.github.tvbox.osc.ui.activity.PartitionListActivity
 import com.github.tvbox.osc.ui.activity.SearchActivity
 import com.github.tvbox.osc.ui.components.AVBoxBottomSheet
@@ -257,9 +256,6 @@ fun HomePage(vm: HomeViewModel, contentPadding: PaddingValues = PaddingValues(0.
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            TextButton(onClick = { MoliysInterfaceActivity.start(context) }) {
-                                Text(stringResource(R.string.moliys_iface_entrance))
-                            }
                             TextButton(onClick = { ConfigManageActivity.start(context) }) {
                                 Text(stringResource(R.string.config_add_subscribe))
                             }

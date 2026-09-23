@@ -1,12 +1,6 @@
 <resources>
     <string name="app_name">归零box</string>
 
-    <!-- 沫离接口页 -->
-    <string name="moliys_iface_title">Moliys Sources</string>
-    <string name="moliys_iface_in_use">In use</string>
-    <string name="moliys_iface_empty">No sources</string>
-    <string name="moliys_iface_entrance">Moliys Sources</string>
-
     <!-- Settings: language (language names stay endonym, same as the platform language picker) -->
     <string name="settings_language">Language</string>
     <string name="settings_language_subtitle">Change the app interface language</string>

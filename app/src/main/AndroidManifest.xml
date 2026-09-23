@@ -100,8 +100,6 @@
         <activity
             android:name=".ui.activity.ConfigManageActivity" />
         <activity
-            android:name=".ui.activity.MoliysInterfaceActivity" />
-        <activity
             android:name=".ui.activity.PlaySettingsActivity" />
         <activity
             android:name=".ui.activity.DanmuSettingsActivity" />

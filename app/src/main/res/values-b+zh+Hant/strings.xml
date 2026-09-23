@@ -1,12 +1,6 @@
 <resources>
     <string name="app_name">归零box</string>
 
-    <!-- 沫离接口页 -->
-    <string name="moliys_iface_title">沫離接口</string>
-    <string name="moliys_iface_in_use">使用中</string>
-    <string name="moliys_iface_empty">接口列表為空</string>
-    <string name="moliys_iface_entrance">沫離接口</string>
-
     <!-- 設定:語言(語言名稱保留各語言自稱) -->
     <string name="settings_language">語言</string>
     <string name="settings_language_subtitle">切換應用程式的介面語言</string>
