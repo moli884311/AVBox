@@ -2,9 +2,6 @@
 
 package com.github.tvbox.osc.ui.page
 
-import android.content.Context
-import android.content.Intent
-import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -25,6 +22,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
@@ -35,6 +33,7 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -70,14 +69,17 @@ import com.github.tvbox.osc.ui.activity.PlaySettingsActivity
 import com.github.tvbox.osc.ui.activity.PreferenceSettingsActivity
 import com.github.tvbox.osc.ui.activity.PreloadSettingsActivity
 import com.github.tvbox.osc.ui.activity.ThemeSettingsActivity
+import com.github.tvbox.osc.util.AppUpdater
 import com.github.tvbox.osc.util.FileUtils
 import com.github.tvbox.osc.util.HistoryHelper
+import com.github.tvbox.osc.util.UpdateInfo
 import com.github.tvbox.osc.util.HistoryMerge
 import com.github.tvbox.osc.util.HawkConfig
 import com.github.tvbox.osc.util.MusicSettings
 import com.github.tvbox.osc.util.OkGoHelper
 import com.github.tvbox.osc.util.KV
 import com.github.tvbox.osc.util.LOG
+import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -227,6 +229,59 @@ fun SettingsPage(
         }
     }
     var aboutSheet by remember { mutableStateOf(false) }
+
+    val scope = rememberCoroutineScope()
+    var updateStage by remember { mutableStateOf<UpdateStage>(UpdateStage.Idle) }
+    var updateProgress by remember { mutableStateOf(0) }
+    var pendingApk by remember { mutableStateOf<File?>(null) }
+
+    // 从"允许安装未知来源应用"授权页返回后,若已获权限则自动接着安装
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        val apk = pendingApk
+        if (apk != null && AppUpdater.canInstall(context)) {
+            pendingApk = null
+            AppUpdater.installApk(context, apk)
+        }
+    }
+
+    // 检测更新:远端清单 versionCode > 本地才算有新版本
+    val runUpdateCheck: () -> Unit = {
+        if (updateStage !is UpdateStage.Checking && updateStage !is UpdateStage.Downloading) {
+            updateStage = UpdateStage.Checking
+            scope.launch {
+                val latest = withContext(Dispatchers.IO) { AppUpdater.fetchLatest() }
+                updateStage = when {
+                    latest == null -> UpdateStage.CheckFailed
+                    latest.versionCode <= AppUpdater.currentVersionCode(context) -> UpdateStage.Latest
+                    else -> UpdateStage.Available(latest)
+                }
+            }
+        }
+    }
+
+    // 下载 APK 并调起安装;首次安装会被系统拦到"未知来源"授权页
+    val startUpdateDownload: (UpdateInfo) -> Unit = { info ->
+        updateStage = UpdateStage.Downloading(info)
+        updateProgress = 0
+        scope.launch {
+            val apk = withContext(Dispatchers.IO) {
+                AppUpdater.download(context, info.url) { percent -> updateProgress = percent }
+            }
+            if (apk == null) {
+                updateStage = UpdateStage.DownloadFailed
+            } else {
+                updateStage = UpdateStage.Idle
+                if (AppUpdater.canInstall(context)) {
+                    AppUpdater.installApk(context, apk)
+                    Toast.makeText(context, R.string.update_install_start, Toast.LENGTH_SHORT).show()
+                } else {
+                    pendingApk = apk
+                    AppUpdater.openInstallPermission(context)
+                    Toast.makeText(context, R.string.update_install_permission, Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+    }
 
     val listState = rememberScrollState()
 
@@ -383,10 +438,14 @@ fun SettingsPage(
             
                 SettingsCard(SettingsCardPosition.LAST) {
                     SettingsRow(
-                        title = stringResource(R.string.settings_github),
-                        subtitle = stringResource(R.string.settings_github_subtitle),
-                        iconRes = R.drawable.ic_settings_github,
-                        onClick = { openExternalUrl(context, GITHUB_REPO_URL) },
+                        title = stringResource(R.string.settings_check_update),
+                        subtitle = if (updateStage is UpdateStage.Checking) {
+                            stringResource(R.string.update_checking)
+                        } else {
+                            stringResource(R.string.settings_check_update_subtitle)
+                        },
+                        iconRes = R.drawable.ic_settings_update,
+                        onClick = runUpdateCheck,
                     )
                 }
             }
@@ -395,6 +454,96 @@ fun SettingsPage(
 
     if (aboutSheet) {
         AboutSheet(versionName = versionName, onDismiss = { aboutSheet = false })
+    }
+
+    when (val stage = updateStage) {
+        is UpdateStage.Checking -> AVBoxAlertDialog(
+            onDismissRequest = {},
+            title = { Text(stringResource(R.string.settings_check_update)) },
+            text = { Text(stringResource(R.string.update_checking)) },
+            confirmButton = {},
+            dismissible = false,
+        )
+
+        is UpdateStage.Latest -> AVBoxAlertDialog(
+            onDismissRequest = { updateStage = UpdateStage.Idle },
+            title = { Text(stringResource(R.string.settings_check_update)) },
+            text = { Text(stringResource(R.string.update_latest)) },
+            confirmButton = {
+                TextButton(onClick = { updateStage = UpdateStage.Idle }) {
+                    Text(stringResource(R.string.common_confirm))
+                }
+            },
+        )
+
+        is UpdateStage.Available -> AVBoxAlertDialog(
+            onDismissRequest = { updateStage = UpdateStage.Idle },
+            title = { Text(stringResource(R.string.update_available_title, stage.info.versionName)) },
+            text = {
+                Text(
+                    if (stage.info.notes.isNotEmpty()) {
+                        stage.info.notes
+                    } else {
+                        stringResource(R.string.update_available_notes)
+                    }
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = { startUpdateDownload(stage.info) }) {
+                    Text(stringResource(R.string.update_now))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { updateStage = UpdateStage.Idle }) {
+                    Text(stringResource(R.string.update_later))
+                }
+            },
+        )
+
+        is UpdateStage.Downloading -> AVBoxAlertDialog(
+            onDismissRequest = {},
+            title = { Text(stringResource(R.string.update_downloading, stage.info.versionName)) },
+            text = {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    LinearProgressIndicator(
+                        progress = { updateProgress / 100f },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        text = "$updateProgress%",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            },
+            confirmButton = {},
+            dismissible = false,
+        )
+
+        is UpdateStage.CheckFailed -> AVBoxAlertDialog(
+            onDismissRequest = { updateStage = UpdateStage.Idle },
+            title = { Text(stringResource(R.string.settings_check_update)) },
+            text = { Text(stringResource(R.string.update_check_failed)) },
+            confirmButton = {
+                TextButton(onClick = { updateStage = UpdateStage.Idle }) {
+                    Text(stringResource(R.string.common_confirm))
+                }
+            },
+        )
+
+        is UpdateStage.DownloadFailed -> AVBoxAlertDialog(
+            onDismissRequest = { updateStage = UpdateStage.Idle },
+            title = { Text(stringResource(R.string.settings_check_update)) },
+            text = { Text(stringResource(R.string.update_download_failed)) },
+            confirmButton = {
+                TextButton(onClick = { updateStage = UpdateStage.Idle }) {
+                    Text(stringResource(R.string.common_confirm))
+                }
+            },
+        )
+
+        else -> Unit
     }
 
 }
@@ -477,14 +626,28 @@ private fun AboutSheet(versionName: String, onDismiss: () -> Unit) {
     }
 }
 
-private const val GITHUB_REPO_URL = "https://github.com/moli884311/AVBox"
+/** 检测更新的界面状态机 */
+private sealed interface UpdateStage {
+    /** 空闲 */
+    object Idle : UpdateStage
 
-private fun openExternalUrl(context: Context, url: String) {
-    try {
-        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
-    } catch (e: Exception) {
-        Toast.makeText(context, context.getString(R.string.toast_no_app_for_link), Toast.LENGTH_SHORT).show()
-    }
+    /** 正在请求远端版本清单 */
+    object Checking : UpdateStage
+
+    /** 已是最新版本 */
+    object Latest : UpdateStage
+
+    /** 有新版本可下载 */
+    data class Available(val info: UpdateInfo) : UpdateStage
+
+    /** 下载中(进度见 updateProgress) */
+    data class Downloading(val info: UpdateInfo) : UpdateStage
+
+    /** 检测失败(网络/清单异常) */
+    object CheckFailed : UpdateStage
+
+    /** 下载失败 */
+    object DownloadFailed : UpdateStage
 }
 
 @Composable

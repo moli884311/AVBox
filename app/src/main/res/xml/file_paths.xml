@@ -18,4 +18,12 @@
     <external-path
         name="beta_external_files_path"
         path="Android/data/" />
+
+    <!-- 应用自更新:下载的安装包目录(files/update 与 Android/data/<pkg>/files/update) -->
+    <files-path
+        name="update_internal_apk"
+        path="update/" />
+    <external-files-path
+        name="update_external_apk"
+        path="update/" />
 </paths>

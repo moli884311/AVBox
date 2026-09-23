@@ -420,8 +420,19 @@
     <string name="settings_about_subtitle">檢視詳細資訊</string>
     <string name="settings_about_version">版本 v%1$s</string>
     <string name="settings_about_disclaimer">本軟體僅提供聚合展示功能，所有資源均來自網際網路，軟體不參與任何內建、製作、上傳、儲存、下載等內容，也不接受任何捐贈、打賞、付費等謀利行為，軟體僅供開源學習參考，請於安裝後24小時內刪除。\n\n打包分發請保留出處\nhttps://github.com/CatVodTVOfficial/TVBoxOSC\nhttps://github.com/q215613905/TVBoxOS</string>
-    <string name="settings_github">造訪 GitHub 儲存庫</string>
-    <string name="settings_github_subtitle">造訪專案原始碼儲存庫</string>
+    <string name="settings_check_update">檢測更新</string>
+    <string name="settings_check_update_subtitle">檢查是否有新版本</string>
+    <string name="update_checking">正在檢測更新…</string>
+    <string name="update_latest">當前已經是最新版本啦</string>
+    <string name="update_available_title">發現新版本 %1$s</string>
+    <string name="update_available_notes">是否立即下載並安裝新版本？</string>
+    <string name="update_now">立即更新</string>
+    <string name="update_later">暫不更新</string>
+    <string name="update_downloading">正在下載 %1$s</string>
+    <string name="update_install_start">下載完成，正在調起安裝</string>
+    <string name="update_install_permission">請允許本應用安裝未知來源應用後重試</string>
+    <string name="update_check_failed">檢測更新失敗，請檢查網路後重試</string>
+    <string name="update_download_failed">下載失敗，請稍後重試</string>
     <string name="settings_app_tagline">TVBox手機版</string>
 
     <!-- 設定:偏好設定 -->
