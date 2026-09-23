@@ -2,6 +2,8 @@ package com.github.tvbox.osc.util;
 
 import android.text.TextUtils;
 
+import com.github.catvod.net.OkHttp;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -39,14 +41,63 @@ public class DanmuSourceStore {
 
     private static final String KEY = HawkConfig.DANMU_API_LIST;
 
-    /** 内置源(与设置页「弹幕 API」列表一致) */
+    /** 站点弹幕源清单,「恢复默认」优先拉它,失败才用内置 */
+    public static final String REMOTE_DEFAULTS = "https://tvbox.moliys.icu/data/danmu.json";
+
+    /** 内置源(顺序即优先级,与 https://tvbox.moliys.icu 「弹幕」标签页的 data/danmu.json 一致) */
     public static List<Item> defaults() {
         List<Item> list = new ArrayList<>();
-        list.add(new Item("阿里云", "http://47.107.188.112:6008/87654321", true));
+        list.add(new Item("ecs源", "http://ecs.dysobo.cn:9321/87654321", true));
         list.add(new Item("快源", "http://43.143.108.212/87654321", true));
-        list.add(new Item("ecs", "http://ecs.dysobo.cn:9321/87654321", true));
-        list.add(new Item("默认", "https://logvardanmu.konfan.cn/87654321", true));
+        list.add(new Item("阿里云源", "http://47.107.188.112:6008/87654321", true));
+        list.add(new Item("量大", "http://38.207.186.41/87654321", true));
+        list.add(new Item("luosen", "https://dm.ljiaovm.com/luosen", true));
+        list.add(new Item("ip源", "https://172.252.125.145/87654321", true));
+        list.add(new Item("sym源", "https://danmu1.sym9233.dpdns.org/87654321", true));
+        list.add(new Item("777775源", "https://danmu.7777735.xyz/87654321", true));
+        list.add(new Item("pizazz源", "https://pizazz.us.ci/1314", true));
+        list.add(new Item("公益1", "https://danmu.iyo.us.ci/theft-dastardly-prognosis-hula-agenda2-dropkick", true));
+        list.add(new Item("公益2", "https://danmu-api-one-vert.vercel.app/87654321", true));
+        list.add(new Item("W佬公益源", "https://dm.660505.xyz:8443/a123456", true));
         return list;
+    }
+
+    /** 拉取站点最新源清单;失败或无有效条目返回 null(调用方回退 defaults) */
+    public static List<Item> fetchRemoteDefaults() {
+        String body = OkHttp.string(REMOTE_DEFAULTS, 8000L);
+        if (TextUtils.isEmpty(body)) return null;
+        try {
+            JSONArray array = new JSONArray(body.trim());
+            List<Item> list = new ArrayList<>();
+            for (int i = 0; i < array.length(); i++) {
+                JSONObject object = array.optJSONObject(i);
+                if (object == null) continue;
+                String raw = object.optString("url", "");
+                String url = cleanUrl(raw);
+                if (url == null) continue;
+                String name = object.optString("name", "").trim();
+                if (TextUtils.isEmpty(name)) name = aliasOf(raw);
+                list.add(new Item(TextUtils.isEmpty(name) ? url : name, url, true));
+            }
+            return list.isEmpty() ? null : list;
+        } catch (Throwable th) {
+            return null;
+        }
+    }
+
+    /** 去掉 "url|备注" 的备注段;返回 null 表示非法 */
+    public static String cleanUrl(String raw) {
+        String url = raw == null ? "" : raw.trim();
+        int pipe = url.indexOf('|');
+        if (pipe >= 0) url = url.substring(0, pipe).trim();
+        return url.startsWith("http") ? url : null;
+    }
+
+    /** "url|备注" 里的备注名(没有则空串) */
+    public static String aliasOf(String raw) {
+        String url = raw == null ? "" : raw.trim();
+        int pipe = url.indexOf('|');
+        return pipe >= 0 ? url.substring(pipe + 1).trim() : "";
     }
 
     /** 读取源列表;首次读取时把旧的单条「弹幕 API」迁入,并落盘内置默认 */
@@ -57,9 +108,9 @@ public class DanmuSourceStore {
             if (parsed != null) return parsed;
         }
         List<Item> list = defaults();
-        String legacy = KV.get(HawkConfig.DANMU_API, "");
-        if (!TextUtils.isEmpty(legacy)) {
-            list.add(0, new Item("自定义", legacy.trim(), true));
+        String legacy = cleanUrl(KV.get(HawkConfig.DANMU_API, ""));
+        if (legacy != null) {
+            list.add(0, new Item("自定义", legacy, true));
         }
         save(list);
         return list;
@@ -71,7 +122,7 @@ public class DanmuSourceStore {
             for (Item item : list) {
                 JSONObject object = new JSONObject();
                 object.put("name", item.name);
-                object.put("url", item.url);
+                object.put("url", TextUtils.isEmpty(cleanUrl(item.url)) ? item.url : cleanUrl(item.url));
                 object.put("enabled", item.enabled);
                 object.put("latency", item.latency);
                 array.put(object);
@@ -89,7 +140,8 @@ public class DanmuSourceStore {
     public static List<String> enabledUrls() {
         List<String> urls = new ArrayList<>();
         for (Item item : load()) {
-            if (item.enabled && !TextUtils.isEmpty(item.url)) urls.add(item.url.trim());
+            String url = cleanUrl(item.url);
+            if (item.enabled && url != null) urls.add(url);
         }
         return urls;
     }
@@ -102,9 +154,11 @@ public class DanmuSourceStore {
             for (int i = 0; i < array.length(); i++) {
                 JSONObject object = array.optJSONObject(i);
                 if (object == null) continue;
-                String url = object.optString("url", "").trim();
-                if (TextUtils.isEmpty(url)) continue;
+                String raw = object.optString("url", "");
+                String url = cleanUrl(raw);
+                if (url == null) continue;
                 String name = object.optString("name", "").trim();
+                if (TextUtils.isEmpty(name)) name = aliasOf(raw);
                 list.add(new Item(TextUtils.isEmpty(name) ? url : name, url,
                         object.optBoolean("enabled", true), object.optLong("latency", 0L)));
             }

@@ -155,7 +155,14 @@ fun DanmuApiSettingsScreen(onNavigateBack: () -> Unit) {
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 BottomAction(stringResource(R.string.danmu_api_speed_sort), enabled = !busy) { testAll(true) }
                 BottomAction(stringResource(R.string.danmu_api_restore_default), enabled = !busy) {
-                    persist(DanmuSourceStore.defaults())
+                    busy = true
+                    scope.launch {
+                        val remote = withContext(Dispatchers.IO) {
+                            runCatching { DanmuSourceStore.fetchRemoteDefaults() }.getOrNull()
+                        }
+                        persist(remote ?: DanmuSourceStore.defaults())
+                        busy = false
+                    }
                 }
                 BottomAction(stringResource(R.string.danmu_api_close), enabled = true) { onNavigateBack() }
             }
@@ -168,8 +175,14 @@ fun DanmuApiSettingsScreen(onNavigateBack: () -> Unit) {
         AddSourceDialog(
             onDismiss = { addDialog = false },
             onConfirm = { name, url ->
-                persist(items + DanmuSourceStore.Item(name.ifEmpty { url }, url, true))
-                addDialog = false
+                val clean = DanmuSourceStore.cleanUrl(url)
+                if (clean == null) {
+                    addDialog = false
+                } else {
+                    val label = name.ifEmpty { DanmuSourceStore.aliasOf(url) }.ifEmpty { clean }
+                    persist(items + DanmuSourceStore.Item(label, clean, true))
+                    addDialog = false
+                }
             },
         )
     }

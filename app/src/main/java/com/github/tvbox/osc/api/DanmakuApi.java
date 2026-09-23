@@ -458,11 +458,12 @@ public class DanmakuApi {
         return url.endsWith("/danmaku");
     }
 
-    /** dandanplay 兼容源的基址(去掉末尾 / 与 /87654321 之类的口令后缀),测速与搜索共用 */
+    /** dandanplay 兼容源的基址:去掉 "url|备注" 的备注段与末尾斜杠。口令路径(如 /87654321)必须保留 */
     public static String normalizeBaseUrl(String apiUrl) {
         String url = apiUrl == null ? "" : apiUrl.trim();
-        if (url.endsWith("/")) url = url.substring(0, url.length() - 1);
-        if (url.endsWith("/87654321")) url = url.substring(0, url.length() - "/87654321".length());
+        int pipe = url.indexOf('|');
+        if (pipe >= 0) url = url.substring(0, pipe).trim();
+        while (url.endsWith("/")) url = url.substring(0, url.length() - 1);
         return url;
     }
 
