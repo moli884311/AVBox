@@ -126,7 +126,7 @@ private fun AVBoxThemeLightPreview() {
         config = ThemeConfig(ThemeSource.CUSTOM, ThemeMode.LIGHT, DefaultSeedArgb, PaletteStyle.TonalSpot),
     ) {
         Surface(color = MaterialTheme.colorScheme.surfaceContainer) {
-            Text("AVBox")
+            Text("沫离box")
         }
     }
 }
@@ -138,7 +138,7 @@ private fun AVBoxThemeDarkPreview() {
         config = ThemeConfig(ThemeSource.CUSTOM, ThemeMode.DARK, DefaultSeedArgb, PaletteStyle.TonalSpot),
     ) {
         Surface(color = MaterialTheme.colorScheme.surfaceContainer) {
-            Text("AVBox")
+            Text("沫离box")
         }
     }
 }

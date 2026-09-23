@@ -407,7 +407,7 @@ private fun AppInfoHeaderCard(versionName: String) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "AVBox",
+                    text = "沫离box",
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
                     color = scheme.onPrimaryContainer,
@@ -470,7 +470,7 @@ private fun AboutSheet(versionName: String, onDismiss: () -> Unit) {
     }
 }
 
-private const val GITHUB_REPO_URL = "https://github.com/XiaochangXu/AVBox"
+private const val GITHUB_REPO_URL = "https://github.com/moli884311/AVBox"
 
 private fun openExternalUrl(context: Context, url: String) {
     try {
