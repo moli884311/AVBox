@@ -59,6 +59,33 @@ public class DanmuHelper {
         KV.put(HawkConfig.DANMU_RANDOM_COLOR, randomColor);
     }
 
+    /** 在线弹幕(全局弹幕接口搜索)来源开关 */
+    public static boolean isOnlineEnabled() {
+        return KV.get(HawkConfig.DANMU_SRC_ONLINE, true);
+    }
+
+    public static void setOnlineEnabled(boolean enabled) {
+        KV.put(HawkConfig.DANMU_SRC_ONLINE, enabled);
+    }
+
+    /** 平台弹幕(内置各视频平台弹幕源)来源开关 */
+    public static boolean isPlatformEnabled() {
+        return KV.get(HawkConfig.DANMU_SRC_PLATFORM, true);
+    }
+
+    public static void setPlatformEnabled(boolean enabled) {
+        KV.put(HawkConfig.DANMU_SRC_PLATFORM, enabled);
+    }
+
+    /** 订阅弹幕(用户接口自带弹幕)来源开关 */
+    public static boolean isSubscribeEnabled() {
+        return KV.get(HawkConfig.DANMU_SRC_SUBSCRIBE, true);
+    }
+
+    public static void setSubscribeEnabled(boolean enabled) {
+        KV.put(HawkConfig.DANMU_SRC_SUBSCRIBE, enabled);
+    }
+
     public static int randomColor() {
         int index = (int) (Math.random() * PALETTE.length);
         return Color.parseColor(PALETTE[index]);

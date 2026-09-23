@@ -79,6 +79,9 @@
     <!-- Danmaku sheet -->
     <string name="danmu_settings">Danmaku Settings</string>
     <string name="danmu_online">Online Danmaku</string>
+    <string name="danmu_platform">Platform Danmaku</string>
+    <string name="danmu_subscribe">Subscribed Danmaku</string>
+    <string name="danmu_search">Danmaku Search</string>
     <string name="danmu_color">Danmaku Color</string>
     <string name="danmu_color_random">Random</string>
     <string name="danmu_speed">Danmaku Speed</string>

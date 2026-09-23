@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.material3.Switch
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -63,7 +64,18 @@ fun DanmuSettingSheet(sheet: DanmuSettingSheetState, onDismiss: () -> Unit) {
             var line by remember { mutableIntStateOf(DanmuHelper.getMaxLine()) }
             var alpha by remember { mutableIntStateOf(Math.round(DanmuHelper.getAlpha() * 100)) }
 
-            SheetLabelRow(stringResource(R.string.danmu_online)) {
+            var online by remember { mutableStateOf(DanmuHelper.isOnlineEnabled()) }
+            var platform by remember { mutableStateOf(DanmuHelper.isPlatformEnabled()) }
+            var subscribe by remember { mutableStateOf(DanmuHelper.isSubscribeEnabled()) }
+            // 来源开关变化:持久化后按 订阅→在线→平台 重新选源
+            val reselect: () -> Unit = { sheet.onReselect() }
+
+            SheetSwitchRow(stringResource(R.string.danmu_online), online) { on ->
+                online = on
+                DanmuHelper.setOnlineEnabled(on)
+                reselect()
+            }
+            SheetLabelRow(stringResource(R.string.danmu_search)) {
                 SheetButton(
                     text = stringResource(R.string.common_search),
                     onClick = {
@@ -72,6 +84,16 @@ fun DanmuSettingSheet(sheet: DanmuSettingSheetState, onDismiss: () -> Unit) {
                     },
                     modifier = Modifier.weight(1f),
                 )
+            }
+            SheetSwitchRow(stringResource(R.string.danmu_platform), platform) { on ->
+                platform = on
+                DanmuHelper.setPlatformEnabled(on)
+                reselect()
+            }
+            SheetSwitchRow(stringResource(R.string.danmu_subscribe), subscribe) { on ->
+                subscribe = on
+                DanmuHelper.setSubscribeEnabled(on)
+                reselect()
             }
                 SheetLabelRow(stringResource(R.string.danmu_color)) {
                     SheetChipRow(
@@ -160,6 +182,15 @@ fun DanmuSettingSheet(sheet: DanmuSettingSheetState, onDismiss: () -> Unit) {
                 }
                 Spacer(Modifier.height(playerDim(R.dimen.vs_24)))
         }
+    }
+}
+
+/** 弹幕来源开关行:右对齐 M3 Switch */
+@Composable
+private fun SheetSwitchRow(label: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
+    SheetLabelRow(label) {
+        Spacer(Modifier.weight(1f))
+        Switch(checked = checked, onCheckedChange = onCheckedChange)
     }
 }
 

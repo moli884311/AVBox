@@ -22,6 +22,7 @@ import com.github.tvbox.osc.ui.player.PreloadCoordinator;
 import com.github.tvbox.osc.api.ApiConfig;
 import com.github.tvbox.osc.base.App;
 import com.github.tvbox.osc.api.DanmakuApi;
+import com.github.tvbox.osc.util.DanmuHelper;
 import com.github.tvbox.osc.bean.ParseBean;
 import com.github.tvbox.osc.bean.SourceBean;
 import com.github.tvbox.osc.bean.VodInfo;
@@ -1119,6 +1120,9 @@ public class PlaybackController {
                         // 取流成功,手动选线标记完成使命,后续失败恢复走正常自动策略
                         st.userPickedLine = false;
                         String danmaku = info.optString("danmaku", "").trim();
+                        lastSubscribeDanmu = danmaku;
+                        // 订阅弹幕开关关闭时忽略接口自带弹幕,直接回退到在线/平台来源
+                        if (!DanmuHelper.isSubscribeEnabled()) danmaku = "";
                         final String danmuProgressKey = progressKey();
                         setWebUserAgent(null);
                         setWebHeaderMap(null);
@@ -1242,6 +1246,7 @@ public class PlaybackController {
 
     /** 取流结果没带弹幕地址时联网搜一份(与进度键绑定:切集后旧结果作废) */
     private void searchDanmu(String danmaku) {
+        if (!DanmuHelper.isOnlineEnabled()) return;
         if (!TextUtils.isEmpty(danmaku) || !DanmakuApi.canSearch(sourceBean()) || vod() == null) return;
         VodInfo.VodSeries series = currentSeries(vod().playFlag, vod().playIndex);
         String key = progressKey();
@@ -1262,6 +1267,20 @@ public class PlaybackController {
 
     private void checkDanmu(String danmaku, Runnable onFailed) {
         if (view != null) view.checkDanmu(danmaku, onFailed);
+    }
+
+    /** 弹幕来源开关变更后按 订阅→在线→平台 重新选源(平台来源见 PlatformDanmuEngine) */
+    public void reselectDanmu() {
+        String subscribe = DanmuHelper.isSubscribeEnabled() ? lastSubscribeDanmu : "";
+        final String danmuProgressKey = progressKey();
+        if (TextUtils.isEmpty(subscribe)) {
+            checkDanmu("", null);
+            searchDanmu("");
+        } else {
+            checkDanmu(subscribe, () -> {
+                if (TextUtils.equals(danmuProgressKey, progressKey())) searchDanmu("");
+            });
+        }
     }
 
     // -------------------- 解析/嗅探门面(见 PlayUrlResolver) --------------------
@@ -1654,6 +1673,8 @@ public class PlaybackController {
     private String playArtwork;
     /** 当前集的弹幕地址(取流结果或弹幕搜索的产物;退页面重进时页面要重新拿一份) */
     private String playDanmu;
+    /** 本次取流结果里接口(订阅)自带的弹幕地址,供来源开关切换后重新选源用 */
+    private String lastSubscribeDanmu = "";
 
     @Nullable
     public String playArtwork() {

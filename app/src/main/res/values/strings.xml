@@ -79,6 +79,9 @@
     <!-- 弹幕面板 -->
     <string name="danmu_settings">弹幕设置</string>
     <string name="danmu_online">在线弹幕</string>
+    <string name="danmu_platform">平台弹幕</string>
+    <string name="danmu_subscribe">订阅弹幕</string>
+    <string name="danmu_search">弹幕搜索</string>
     <string name="danmu_color">弹幕颜色</string>
     <string name="danmu_color_random">随机</string>
     <string name="danmu_speed">弹幕速度</string>

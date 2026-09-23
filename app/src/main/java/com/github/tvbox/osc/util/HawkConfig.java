@@ -135,6 +135,12 @@ public class HawkConfig {
     public static final String DANMU_API = "danmu_api";
     /** 弹幕接口是否用内置默认(原为 DanmakuApi 内的字面量键,2026-09-13 KV 迁移时集中登记) */
     public static final String DANMU_API_USE_DEFAULT = "danmu_api_use_default";
+    /** 在线弹幕(全局弹幕接口按名称搜索)来源开关 */
+    public static final String DANMU_SRC_ONLINE = "danmu_src_online";
+    /** 平台弹幕(内置各视频平台弹幕源,自动择优)来源开关 */
+    public static final String DANMU_SRC_PLATFORM = "danmu_src_platform";
+    /** 订阅弹幕(用户接口/爬虫自带弹幕地址)来源开关 */
+    public static final String DANMU_SRC_SUBSCRIBE = "danmu_src_subscribe";
     // 源名快照(2026-09-14):HashMap<sourceKey, 源显示名>。历史记录只存 sourceKey 不存源名,
     // 换源/冷启动后源不在当前配置里时,历史卡片靠这份快照兜底显示记录时的完整源名(含 emoji)
     public static final String SOURCE_NAME_CACHE = "source_name_cache";

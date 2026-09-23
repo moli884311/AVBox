@@ -579,6 +579,9 @@ public class PlayContainer extends FrameLayout implements CustomAdapt, PlaybackH
                 mController.getUiState().setDanmuSettingSheet(new DanmuSettingSheetState(() -> {
                     openDanmuSearchSheet();
                     return kotlin.Unit.INSTANCE;
+                }, () -> {
+                    if (scheduler != null) scheduler.reselectDanmu();
+                    return kotlin.Unit.INSTANCE;
                 }));
             }
 

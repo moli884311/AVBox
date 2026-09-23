@@ -163,6 +163,8 @@ class SelectDialogState(
 /** 弹幕设置面板状态（Step 6 替代 View 版 DanmuSettingDialog） */
 class DanmuSettingSheetState(
     val onOpenSearch: () -> Unit,
+    /** 弹幕来源开关变更后重新按 订阅→在线→平台 顺序选源 */
+    val onReselect: () -> Unit = {},
 )
 
 /** 弹幕搜索面板状态（替代 View 版 SearchDanmuDialog）；onLoad = 命中弹幕 XML 回调（PlayContainer.checkDanmu） */
