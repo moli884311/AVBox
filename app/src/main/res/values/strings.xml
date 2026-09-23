@@ -1,6 +1,12 @@
 <resources>
     <string name="app_name">沫离影视</string>
 
+    <!-- 沫离接口页 -->
+    <string name="moliys_iface_title">沫离接口</string>
+    <string name="moliys_iface_in_use">使用中</string>
+    <string name="moliys_iface_empty">接口列表为空</string>
+    <string name="moliys_iface_entrance">沫离接口</string>
+
     <!-- 设置:语言 -->
     <string name="settings_language">语言</string>
     <string name="settings_language_subtitle">切换应用的界面语言</string>

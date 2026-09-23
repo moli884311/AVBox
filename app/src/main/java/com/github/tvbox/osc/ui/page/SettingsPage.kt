@@ -64,6 +64,7 @@ import com.github.tvbox.osc.ui.components.SettingsGroup
 import com.github.tvbox.osc.ui.components.SettingsOptionMenuRow
 import com.github.tvbox.osc.ui.components.SettingsRow
 import com.github.tvbox.osc.ui.activity.ConfigManageActivity
+import com.github.tvbox.osc.ui.activity.MoliysInterfaceActivity
 import com.github.tvbox.osc.ui.activity.PlaySettingsActivity
 import com.github.tvbox.osc.ui.activity.PreferenceSettingsActivity
 import com.github.tvbox.osc.ui.activity.PreloadSettingsActivity
@@ -252,6 +253,13 @@ fun SettingsPage(
 
             SettingsGroup(title = null) {
                 SettingsCard(SettingsCardPosition.FIRST) {
+                    SettingsRow(
+                        title = stringResource(R.string.moliys_iface_entrance),
+                        iconRes = R.drawable.ic_subscribe_source,
+                        onClick = { MoliysInterfaceActivity.start(context) },
+                    )
+                }
+                SettingsCard(SettingsCardPosition.MIDDLE) {
                     SettingsRow(
                         title = stringResource(R.string.settings_config_manage),
                         subtitle = stringResource(R.string.settings_config_manage_subtitle),
