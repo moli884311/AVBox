@@ -1139,16 +1139,7 @@ public class PlaybackController {
                             if (view != null) view.showParse(false);
                             if (view != null) playUrl(playUrl + url, headers);
                         }
-                        if (TextUtils.isEmpty(danmaku)) {
-                            checkDanmu("", null);
-                            searchDanmu("");
-                        } else {
-                            checkDanmu(danmaku, () -> {
-                                if (TextUtils.equals(danmuProgressKey, progressKey())) {
-                                    searchDanmu("");
-                                }
-                            });
-                        }
+                        selectDanmu(danmaku, danmuProgressKey);
                     } catch (Throwable th) {
                         handleResolvePlayUrlFailed(str(R.string.player_get_info_error));
                     }
@@ -1244,13 +1235,53 @@ public class PlaybackController {
         return value.contains("lyric") || value.contains("lrc") || name.contains("歌词"); // i18n: keep
     }
 
-    /** 取流结果没带弹幕地址时联网搜一份(与进度键绑定:切集后旧结果作废) */
-    private void searchDanmu(String danmaku) {
-        if (!DanmuHelper.isOnlineEnabled()) return;
-        if (!TextUtils.isEmpty(danmaku) || !DanmakuApi.canSearch(sourceBean()) || vod() == null) return;
+    /**
+     * 弹幕选源(与进度键绑定:切集后旧结果作废):
+     * 订阅(接口直给地址 → 填写的「搜索接口」→ 接口自带 danmaku) → 在线(内置在线接口) → 平台(Phase 2)
+     */
+    private void selectDanmu(String directDanmu, String key) {
+        if (!TextUtils.isEmpty(directDanmu) && DanmuHelper.isSubscribeEnabled()) {
+            checkDanmu(directDanmu, () -> {
+                if (TextUtils.equals(key, progressKey())) searchSubscribeDanmu(key);
+            });
+            return;
+        }
+        checkDanmu("", null);
+        searchSubscribeDanmu(key);
+    }
+
+    /** 订阅弹幕:用户填写的「搜索接口」优先,没填用接口自带;都没配则落到在线 */
+    private void searchSubscribeDanmu(String key) {
+        if (!DanmuHelper.isSubscribeEnabled() || vod() == null) {
+            searchOnlineDanmu(key);
+            return;
+        }
+        String api = DanmakuApi.getSubscribeApiUrl();
+        if (TextUtils.isEmpty(api)) {
+            searchOnlineDanmu(key);
+            return;
+        }
         VodInfo.VodSeries series = currentSeries(vod().playFlag, vod().playIndex);
-        String key = progressKey();
-        DanmakuApi.search(vod().name, series == null ? "" : series.name, new DanmakuApi.SearchCallback() {
+        DanmakuApi.searchWith(api, vod().name, series == null ? "" : series.name, new DanmakuApi.SearchCallback() {
+            @Override
+            public void onFound(String url) {
+                if (!TextUtils.equals(key, progressKey())) return;
+                checkDanmu(url, null);
+            }
+
+            @Override
+            public void onNotFound() {
+                if (!TextUtils.equals(key, progressKey())) return;
+                searchOnlineDanmu(key);
+            }
+        });
+    }
+
+    /** 在线弹幕:内置在线接口 */
+    private void searchOnlineDanmu(String key) {
+        if (!DanmuHelper.isOnlineEnabled() || vod() == null || !DanmakuApi.canSearch(sourceBean())) return;
+        VodInfo.VodSeries series = currentSeries(vod().playFlag, vod().playIndex);
+        DanmakuApi.searchWith(DanmakuApi.getOnlineApiUrl(), vod().name, series == null ? "" : series.name, new DanmakuApi.SearchCallback() {
             @Override
             public void onFound(String url) {
                 if (!TextUtils.equals(key, progressKey())) return;
@@ -1271,16 +1302,7 @@ public class PlaybackController {
 
     /** 弹幕来源开关变更后按 订阅→在线→平台 重新选源(平台来源见 PlatformDanmuEngine) */
     public void reselectDanmu() {
-        String subscribe = DanmuHelper.isSubscribeEnabled() ? lastSubscribeDanmu : "";
-        final String danmuProgressKey = progressKey();
-        if (TextUtils.isEmpty(subscribe)) {
-            checkDanmu("", null);
-            searchDanmu("");
-        } else {
-            checkDanmu(subscribe, () -> {
-                if (TextUtils.equals(danmuProgressKey, progressKey())) searchDanmu("");
-            });
-        }
+        selectDanmu(lastSubscribeDanmu, progressKey());
     }
 
     // -------------------- 解析/嗅探门面(见 PlayUrlResolver) --------------------

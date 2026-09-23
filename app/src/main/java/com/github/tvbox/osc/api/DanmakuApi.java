@@ -91,8 +91,29 @@ public class DanmakuApi {
         KV.put(HawkConfig.DANMU_API, api);
     }
 
+    /** 内置在线弹幕接口(「在线弹幕」开关使用) */
+    public static String getOnlineApiUrl() {
+        return BUILTIN_API;
+    }
+
+    /**
+     * 订阅弹幕源(「订阅弹幕」开关使用):优先用户填写的「搜索接口」,
+     * 没填则用接口(订阅)自带的 danmaku;两者都没有则返回空(不兜底内置在线接口)。
+     */
+    public static String getSubscribeApiUrl() {
+        String custom = KV.get(HawkConfig.DANMU_API, "");
+        if (!TextUtils.isEmpty(custom)) return custom.trim();
+        String config = ApiConfig.get().getDanmaku().trim();
+        if (!TextUtils.isEmpty(config)) return config;
+        return "";
+    }
+
     public static void search(String name, String episode, SearchCallback callback) {
-        String apiUrl = getApiUrl();
+        searchWith(getApiUrl(), name, episode, callback);
+    }
+
+    /** 按指定弹幕接口搜索(订阅/在线复用同一套解析逻辑) */
+    public static void searchWith(String apiUrl, String name, String episode, SearchCallback callback) {
 //        LOG.i("echo-danmaku search apiUrl: " + apiUrl);
         if (TextUtils.isEmpty(apiUrl) || callback == null) return;
         try {
