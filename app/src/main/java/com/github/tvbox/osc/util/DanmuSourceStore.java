@@ -72,11 +72,11 @@ public class DanmuSourceStore {
             for (int i = 0; i < array.length(); i++) {
                 JSONObject object = array.optJSONObject(i);
                 if (object == null) continue;
-                String raw = object.optString("url", "");
-                String url = cleanUrl(raw);
+                String rawUrl = object.optString("url", "");
+                String url = cleanUrl(rawUrl);
                 if (url == null) continue;
                 String name = object.optString("name", "").trim();
-                if (TextUtils.isEmpty(name)) name = aliasOf(raw);
+                if (TextUtils.isEmpty(name)) name = aliasOf(rawUrl);
                 list.add(new Item(TextUtils.isEmpty(name) ? url : name, url, true));
             }
             return list.isEmpty() ? null : list;
