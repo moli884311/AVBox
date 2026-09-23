@@ -15,6 +15,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import master.flame.danmaku.danmaku.model.AbsDanmakuSync;
 import master.flame.danmaku.danmaku.model.BaseDanmaku;
 import master.flame.danmaku.danmaku.model.IDisplayer;
 import master.flame.danmaku.danmaku.model.android.DanmakuContext;
@@ -39,12 +40,15 @@ public class DanmuLoadController {
     private boolean pendingPrepare;
     private boolean temporarilyClosed;
     private LoadCallback loadCallback;
+    /** 弹幕与播放位置允许的偏差;超过则由库 requestSync 平移对齐(越小越跟手) */
+    private static final long DANMU_SYNC_THRESHOLD_MS = 150L;
 
     public DanmuLoadController(MyVideoView videoView, PlayerControlApi controller, DanmakuView danmuView) {
         this.videoView = videoView;
         this.controller = controller;
         this.danmuView = danmuView;
         this.danmakuContext = DanmakuContext.create();
+        applyDanmakuSync();
         if (this.videoView != null) {
             this.videoView.setDanmuView(this.danmuView);
         }
@@ -57,9 +61,44 @@ public class DanmuLoadController {
      */
     public void setVideoView(MyVideoView videoView) {
         this.videoView = videoView;
+        applyDanmakuSync();
         if (videoView != null && danmuView != null) {
             videoView.setDanmuView(danmuView);
         }
+    }
+
+    /**
+     * 用弹幕库内置的 {@link AbsDanmakuSync} 把弹幕时间轴对齐播放器:
+     * 库内部 DrawHandler.draw 会拿这里返回的播放位置与自身 timer 比较,超过阈值时
+     * {@code requestSync} 把在屏弹幕整体平移(不是 reset),因此倍速/seek 下弹幕能连续跟随,
+     * 长按加速也随播放位置一起变快;播放暂停时返回 HALT 让弹幕一起停。
+     * 注意:必须由库自己驱动,直接在 updateTimer 里改 timer 不会重排在屏弹幕。
+     */
+    private void applyDanmakuSync() {
+        if (danmakuContext == null) return;
+        danmakuContext.setDanmakuSync(new AbsDanmakuSync() {
+            @Override
+            public long getUptimeMillis() {
+                MyVideoView view = videoView;
+                return view == null ? 0L : view.getCurrentPosition();
+            }
+
+            @Override
+            public int getSyncState() {
+                MyVideoView view = videoView;
+                return (view != null && view.isPlaying()) ? SYNC_STATE_PLAYING : SYNC_STATE_HALT;
+            }
+
+            @Override
+            public long getThresholdTimeMills() {
+                return DANMU_SYNC_THRESHOLD_MS;
+            }
+
+            @Override
+            public boolean isSyncPlayingState() {
+                return true;
+            }
+        });
     }
 
     public void applySettings(boolean reload) {

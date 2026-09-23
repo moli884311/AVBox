@@ -1,7 +1,6 @@
 package com.github.tvbox.osc.player;
 
 import android.content.Context;
-import android.os.SystemClock;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.Gravity;
@@ -27,55 +26,8 @@ import xyz.doikki.videoplayer.player.VideoView;
 import xyz.doikki.videoplayer.render.TextureRenderViewFactory;
 
 public class MyVideoView extends VideoView implements DrawHandler.Callback {
-    private volatile DanmakuView danmuView;
+    private DanmakuView danmuView;
     private ImageView artworkView;
-
-    /**
-     * 弹幕时间轴基准:弹幕库内部按「墙钟」推进(DrawHandler 用 SystemClock 递增 timer),
-     * 与播放器倍速无关 —— 长按加速/设置倍速时视频走 2x,弹幕仍按 1x 走,时间轴持续错位。
-     * <p>
-     * 这里在主线程按固定周期把「真实播放位置」采成锚点(倍速用带跳变保护的平滑估计,
-     * 避免一次异常的采样把外推速度拉飞造成来回跳),DrawHandler 每帧回调
-     * {@link #updateTimer(DanmakuTimer)} 时按锚点外推并把弹幕时间轴拉到播放位置。
-     * 只改 timer 不碰渲染状态,倍速/seek 都自然跟随(参见 DrawTask 按时间轴 sub 弹幕,前跳安全)。
-     */
-    private static final long DANMU_SYNC_SAMPLE_MS = 100L;
-    private static final long DANMU_SYNC_JUMP_MS = 1500L;
-    private static final float DANMU_SYNC_MIN_SPEED = 0.2f;
-    private static final float DANMU_SYNC_MAX_SPEED = 8f;
-    private static final float DANMU_SYNC_SPEED_ALPHA = 0.25f;
-    private volatile long danmuAnchorPos;
-    private volatile long danmuAnchorUptime;
-    private volatile float danmuAnchorSpeed = 1f;
-    private volatile boolean danmuClockActive;
-    private long danmuSamplePos = -1L;
-    private long danmuSampleUptime;
-
-    private final Runnable danmuClockTick = new Runnable() {
-        @Override
-        public void run() {
-            if (danmuView == null) {
-                danmuClockActive = false;
-                return;
-            }
-            if (danmuView.isPrepared()) {
-                if (isPlaying()) {
-                    sampleDanmuClock();
-                } else {
-                    // 暂停/缓冲:锚点冻结在当前帧、外推速度归零(弹幕随之停住,恢复后从同一位置续走)
-                    danmuSamplePos = -1L;
-                    danmuAnchorSpeed = 0f;
-                    danmuAnchorPos = getCurrentPosition();
-                    danmuAnchorUptime = SystemClock.uptimeMillis();
-                }
-                danmuClockActive = true;
-            } else {
-                danmuClockActive = false;
-            }
-            postDelayed(this, DANMU_SYNC_SAMPLE_MS);
-        }
-    };
-
     /** 封面的在途图片请求句柄:换图/隐藏前必须先取消,否则过期海报可能盖到画面上(见 clearArtwork) */
     private coil3.request.Disposable artworkDisposable;
     private View frameCover;
@@ -315,7 +267,6 @@ public class MyVideoView extends VideoView implements DrawHandler.Callback {
     public void seekTo(long pos) {
         super.seekTo(pos);
         if (haveDanmu()) danmuView.seekTo(pos);
-        resetDanmuClock(pos);
     }
 
     @Override
@@ -339,7 +290,6 @@ public class MyVideoView extends VideoView implements DrawHandler.Callback {
     @Override
     public void release() {
         super.release();
-        stopDanmuClock();
         if (haveDanmu()) danmuView.release();
     }
 
@@ -349,12 +299,7 @@ public class MyVideoView extends VideoView implements DrawHandler.Callback {
 
     public void setDanmuView(DanmakuView view) {
         danmuView = view;
-        if (danmuView != null) {
-            danmuView.setCallback(this);
-            ensureDanmuClock();
-        } else {
-            stopDanmuClock();
-        }
+        if (danmuView != null) danmuView.setCallback(this);
     }
 
     public DanmakuView getDanmuView() {
@@ -367,75 +312,12 @@ public class MyVideoView extends VideoView implements DrawHandler.Callback {
             if (danmuView == null) return;
             if (isPlaying() && danmuView.isPrepared()) {
                 danmuView.start(getCurrentPosition());
-                resetDanmuClock(getCurrentPosition());
             }
         });
     }
 
-    /**
-     * 主线程采样:记录真实播放位置,并用带跳变保护的平滑估计跟踪倍速。
-     * 单次异常采样(缓冲抖动/seek 跳变)不会污染倍速,避免外推速度被拉飞。
-     */
-    private void sampleDanmuClock() {
-        long now = SystemClock.uptimeMillis();
-        long pos = getCurrentPosition();
-        if (danmuSamplePos >= 0L) {
-            long dt = now - danmuSampleUptime;
-            long dp = pos - danmuSamplePos;
-            if (dt >= 40L && dt <= 600L && dp >= 0L) {
-                float instant = (float) dp / (float) dt;
-                if (instant >= DANMU_SYNC_MIN_SPEED && instant <= DANMU_SYNC_MAX_SPEED) {
-                    float expected = dt * danmuAnchorSpeed;
-                    if (Math.abs(dp - expected) < DANMU_SYNC_JUMP_MS) {
-                        if (danmuAnchorSpeed <= 0.05f) {
-                            danmuAnchorSpeed = instant; // 从暂停/缓冲恢复:直接取当前速度,避免从 0 慢慢爬
-                        } else {
-                            danmuAnchorSpeed += (instant - danmuAnchorSpeed) * DANMU_SYNC_SPEED_ALPHA;
-                        }
-                    }
-                }
-            }
-        }
-        danmuSamplePos = pos;
-        danmuSampleUptime = now;
-        danmuAnchorPos = pos;
-        danmuAnchorUptime = now;
-    }
-
-    /** 挂上弹幕视图即开始按周期采样(不依赖 start/resume 回调,长按加速不走这两个入口) */
-    private void ensureDanmuClock() {
-        removeCallbacks(danmuClockTick);
-        danmuSamplePos = -1L;
-        danmuAnchorSpeed = 1f;
-        postDelayed(danmuClockTick, DANMU_SYNC_SAMPLE_MS);
-    }
-
-    private void resetDanmuClock(long position) {
-        danmuSamplePos = -1L;
-        danmuAnchorPos = position;
-        danmuAnchorUptime = SystemClock.uptimeMillis();
-    }
-
-    private void stopDanmuClock() {
-        removeCallbacks(danmuClockTick);
-        danmuClockActive = false;
-    }
-
-    /**
-     * 绘制线程每帧回调:把弹幕时间轴按锚点外推到「当前播放位置」。
-     * 每帧直接对齐(DrawHandler 内部会先按墙钟改写一次 timer,若只在超出阈值时才纠,
-     * 两者会互相拉扯出「快过去又被拉回」的抖动)。只改 timer 不碰渲染状态,
-     * 倍速下弹幕滚动随之变快、seek 后立即对齐,也不会像 seekTo 那样重置渲染闪跳。
-     */
     @Override
     public void updateTimer(DanmakuTimer timer) {
-        if (!danmuClockActive || timer == null) return;
-        DanmakuView view = danmuView;
-        if (view == null || !view.isPrepared()) return;
-        long elapsed = SystemClock.uptimeMillis() - danmuAnchorUptime;
-        long target = danmuAnchorPos + (long) (elapsed * danmuAnchorSpeed);
-        if (target < 0L) target = 0L;
-        if (timer.currMillisecond != target) timer.update(target);
     }
 
     @Override
