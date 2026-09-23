@@ -91,23 +91,6 @@ public class DanmakuApi {
         KV.put(HawkConfig.DANMU_API, api);
     }
 
-    /** 内置在线弹幕接口(「在线弹幕」开关使用) */
-    public static String getOnlineApiUrl() {
-        return BUILTIN_API;
-    }
-
-    /**
-     * 订阅弹幕源(「订阅弹幕」开关使用):优先用户填写的「搜索接口」,
-     * 没填则用接口(订阅)自带的 danmaku;两者都没有则返回空(不兜底内置在线接口)。
-     */
-    public static String getSubscribeApiUrl() {
-        String custom = KV.get(HawkConfig.DANMU_API, "");
-        if (!TextUtils.isEmpty(custom)) return custom.trim();
-        String config = ApiConfig.get().getDanmaku().trim();
-        if (!TextUtils.isEmpty(config)) return config;
-        return "";
-    }
-
     public static void search(String name, String episode, SearchCallback callback) {
         searchWith(getApiUrl(), name, episode, callback);
     }
@@ -458,8 +441,11 @@ public class DanmakuApi {
         if (isUseDefault()) return BUILTIN_API;
         String custom = KV.get(HawkConfig.DANMU_API, "");
         if (!TextUtils.isEmpty(custom)) return custom.trim();
-        String config = ApiConfig.get().getDanmaku().trim();
-        if (!TextUtils.isEmpty(config)) return config;
+        // 接口(订阅)自带 danmaku:仅「订阅弹幕」开关打开时作为来源,否则跳过直接落到内置
+        if (DanmuHelper.isSubscribeEnabled()) {
+            String config = ApiConfig.get().getDanmaku().trim();
+            if (!TextUtils.isEmpty(config)) return config;
+        }
         return BUILTIN_API;
     }
 

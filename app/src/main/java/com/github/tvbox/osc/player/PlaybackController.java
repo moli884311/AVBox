@@ -1237,51 +1237,25 @@ public class PlaybackController {
 
     /**
      * 弹幕选源(与进度键绑定:切集后旧结果作废):
-     * 订阅(接口直给地址 → 填写的「搜索接口」→ 接口自带 danmaku) → 在线(内置在线接口) → 平台(Phase 2)
+     * 订阅(取流结果直给地址,受订阅开关控制) → 在线(填写接口 → 接口自带 → 内置,受在线开关控制) → 平台(Phase 2)
      */
     private void selectDanmu(String directDanmu, String key) {
-        if (!TextUtils.isEmpty(directDanmu) && DanmuHelper.isSubscribeEnabled()) {
-            checkDanmu(directDanmu, () -> {
-                if (TextUtils.equals(key, progressKey())) searchSubscribeDanmu(key);
+        String direct = DanmuHelper.isSubscribeEnabled() ? directDanmu : "";
+        if (!TextUtils.isEmpty(direct)) {
+            checkDanmu(direct, () -> {
+                if (TextUtils.equals(key, progressKey())) searchOnlineDanmu(key);
             });
             return;
         }
         checkDanmu("", null);
-        searchSubscribeDanmu(key);
+        searchOnlineDanmu(key);
     }
 
-    /** 订阅弹幕:用户填写的「搜索接口」优先,没填用接口自带;都没配则落到在线 */
-    private void searchSubscribeDanmu(String key) {
-        if (!DanmuHelper.isSubscribeEnabled() || vod() == null) {
-            searchOnlineDanmu(key);
-            return;
-        }
-        String api = DanmakuApi.getSubscribeApiUrl();
-        if (TextUtils.isEmpty(api)) {
-            searchOnlineDanmu(key);
-            return;
-        }
-        VodInfo.VodSeries series = currentSeries(vod().playFlag, vod().playIndex);
-        DanmakuApi.searchWith(api, vod().name, series == null ? "" : series.name, new DanmakuApi.SearchCallback() {
-            @Override
-            public void onFound(String url) {
-                if (!TextUtils.equals(key, progressKey())) return;
-                checkDanmu(url, null);
-            }
-
-            @Override
-            public void onNotFound() {
-                if (!TextUtils.equals(key, progressKey())) return;
-                searchOnlineDanmu(key);
-            }
-        });
-    }
-
-    /** 在线弹幕:内置在线接口 */
+    /** 在线弹幕:接口按 DanmakuApi.getApiUrl() 解析(填写接口 → 接口自带[受订阅开关] → 内置) */
     private void searchOnlineDanmu(String key) {
         if (!DanmuHelper.isOnlineEnabled() || vod() == null || !DanmakuApi.canSearch(sourceBean())) return;
         VodInfo.VodSeries series = currentSeries(vod().playFlag, vod().playIndex);
-        DanmakuApi.searchWith(DanmakuApi.getOnlineApiUrl(), vod().name, series == null ? "" : series.name, new DanmakuApi.SearchCallback() {
+        DanmakuApi.search(vod().name, series == null ? "" : series.name, new DanmakuApi.SearchCallback() {
             @Override
             public void onFound(String url) {
                 if (!TextUtils.equals(key, progressKey())) return;
