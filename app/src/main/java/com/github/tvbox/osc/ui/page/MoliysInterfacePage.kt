@@ -52,7 +52,8 @@ private data class MoliysInterfaceItem(
     val name: String? = null,
     val url: String? = null,
     val source: String? = null,
-    val size: Long? = null,
+    val size: String? = null,
+    val date: String? = null,
 )
 
 private data class MoliysInterfaceResponse(
@@ -102,15 +103,10 @@ private fun applyMoliysSource(item: MoliysInterfaceItem) {
 }
 
 private fun subtitleOf(item: MoliysInterfaceItem): String {
-    val source = item.source?.trim().orEmpty()
-    val size = item.size ?: 0L
-    val sizeText = if (size > 0) {
-        val mb = size / 1024.0 / 1024.0
-        if (mb >= 1) String.format("%.1f MB", mb) else String.format("%.0f KB", size / 1024.0)
-    } else {
-        ""
-    }
-    return listOf(source, sizeText).filter { it.isNotEmpty() }.joinToString(" · ")
+    // interfaces.json 的 size 是形如 "4.4K" 的字符串，date 是 "20260923"
+    val sizeText = item.size?.trim().orEmpty()
+    val dateText = item.date?.trim().orEmpty()
+    return listOf(sizeText, dateText).filter { it.isNotEmpty() }.joinToString(" · ")
 }
 
 @Composable
