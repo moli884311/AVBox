@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -39,7 +40,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -407,7 +407,7 @@ private fun AppInfoHeaderCard(versionName: String) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "沫离box",
+                    text = "归零box",
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
                     color = scheme.onPrimaryContainer,
@@ -431,14 +431,12 @@ private fun AppInfoHeaderCard(versionName: String) {
                     )
                 }
             }
-            Icon(
-                painter = painterResource(R.drawable.ic_launcher_foreground),
+            Image(
+                painter = painterResource(R.drawable.icon_lingqi),
                 contentDescription = null,
-                tint = scheme.onPrimaryContainer,
                 modifier = Modifier
                     .padding(start = 12.dp)
-                    .size(84.dp)
-                    .scale(1.7f),
+                    .size(88.dp),
             )
         }
     }

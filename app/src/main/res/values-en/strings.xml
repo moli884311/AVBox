@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">沫离影视</string>
+    <string name="app_name">归零box</string>
 
     <!-- 沫离接口页 -->
     <string name="moliys_iface_title">Moliys Sources</string>
@@ -117,7 +117,7 @@
 
     <!-- Cast -->
     <string name="cast_title">Cast to Device</string>
-    <string name="cast_hint">Make sure the TV/box has 沫离影视 installed or DLNA casting enabled\nThe TV/box and the phone are connected to the same Wi-Fi</string>
+    <string name="cast_hint">Make sure the TV/box has 归零box installed or DLNA casting enabled\nThe TV/box and the phone are connected to the same Wi-Fi</string>
     <string name="cast_permission_hint">Allow the “Nearby devices” permission to search for cast devices\nAfter enabling it, tap “Refresh” to retry</string>
     <string name="cast_searching">Searching for devices…</string>
     <string name="cast_no_device">No devices found</string>

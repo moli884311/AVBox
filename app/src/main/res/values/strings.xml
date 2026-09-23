@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">沫离影视</string>
+    <string name="app_name">归零box</string>
 
     <!-- 沫离接口页 -->
     <string name="moliys_iface_title">沫离接口</string>
@@ -117,7 +117,7 @@
 
     <!-- 投屏 -->
     <string name="cast_title">投屏到设备</string>
-    <string name="cast_hint">确认电视/盒子已安装沫离影视或已打开DLNA投屏\n电视/盒子与手机连接在同一Wi-Fi下</string>
+    <string name="cast_hint">确认电视/盒子已安装归零box或已打开DLNA投屏\n电视/盒子与手机连接在同一Wi-Fi下</string>
     <string name="cast_permission_hint">需要允许「附近的设备」权限才能搜索投屏设备\n开启后点「刷新」重试</string>
     <string name="cast_searching">正在搜索设备...</string>
     <string name="cast_no_device">未找到可用设备</string>
