@@ -507,6 +507,8 @@ public class PlayContainer extends FrameLayout implements CustomAdapt, PlaybackH
         }
         if (event.type == RefreshEvent.TYPE_SET_DANMU_SETTINGS) {
             setDanmuViewSettings(event.obj instanceof Boolean && (Boolean) event.obj);
+        } else if (event.type == RefreshEvent.TYPE_DANMU_RESELECT) {
+            if (scheduler != null) scheduler.reselectDanmu();
         } else if (event.type == RefreshEvent.TYPE_DANMU_REFRESH) {
             checkDanmu(event.obj instanceof String ? (String) event.obj : "");
         }

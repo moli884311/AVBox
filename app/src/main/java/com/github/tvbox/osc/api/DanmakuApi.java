@@ -438,14 +438,31 @@ public class DanmakuApi {
     }
 
     private static String getApiUrl() {
-        if (isUseDefault()) return BUILTIN_API;
-        String custom = KV.get(HawkConfig.DANMU_API, "");
-        if (!TextUtils.isEmpty(custom)) return custom.trim();
+        String custom = getCustomApi();
+        if (!TextUtils.isEmpty(custom)) return custom;
         // 接口(订阅)自带 danmaku:仅「订阅弹幕」开关打开时作为来源,否则跳过直接落到内置
         if (DanmuHelper.isSubscribeEnabled()) {
-            String config = ApiConfig.get().getDanmaku().trim();
+            String config = getInterfaceApi();
             if (!TextUtils.isEmpty(config)) return config;
         }
+        return BUILTIN_API;
+    }
+
+    /** 偏好设置里填写的弹幕 API(未填写/走内置时返回空) */
+    public static String getCustomApi() {
+        if (isUseDefault()) return "";
+        String custom = KV.get(HawkConfig.DANMU_API, "");
+        return custom == null ? "" : custom.trim();
+    }
+
+    /** 当前接口(订阅)自带的弹幕 API */
+    public static String getInterfaceApi() {
+        String config = ApiConfig.get().getDanmaku();
+        return config == null ? "" : config.trim();
+    }
+
+    /** 内置在线弹幕接口(兜底来源) */
+    public static String getBuiltinApi() {
         return BUILTIN_API;
     }
 

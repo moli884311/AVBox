@@ -64,6 +64,7 @@ import com.github.tvbox.osc.ui.components.SettingsGroup
 import com.github.tvbox.osc.ui.components.SettingsOptionMenuRow
 import com.github.tvbox.osc.ui.components.SettingsRow
 import com.github.tvbox.osc.ui.activity.ConfigManageActivity
+import com.github.tvbox.osc.ui.activity.DanmuSettingsActivity
 import com.github.tvbox.osc.ui.activity.MoliysInterfaceActivity
 import com.github.tvbox.osc.ui.activity.PlaySettingsActivity
 import com.github.tvbox.osc.ui.activity.PreferenceSettingsActivity
@@ -281,6 +282,14 @@ fun SettingsPage(
                         subtitle = stringResource(R.string.settings_play_subtitle),
                         iconRes = R.drawable.ic_settings_play,
                         onClick = { PlaySettingsActivity.start(context) },
+                    )
+                }
+                SettingsCard(SettingsCardPosition.MIDDLE) {
+                    SettingsRow(
+                        title = stringResource(R.string.danmu_settings),
+                        subtitle = stringResource(R.string.settings_danmu_subtitle),
+                        iconRes = R.drawable.ic_settings_danmu,
+                        onClick = { DanmuSettingsActivity.start(context) },
                     )
                 }
                 SettingsCard(SettingsCardPosition.MIDDLE) {

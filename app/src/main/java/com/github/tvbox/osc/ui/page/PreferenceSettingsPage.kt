@@ -50,7 +50,6 @@ fun PreferenceSettingsScreen(onNavigateBack: () -> Unit, vm: SettingsViewModel =
     var sliderSpeed by remember(state.longPressSpeed) { mutableStateOf(state.longPressSpeed) }
     var sliderBuffer by remember(state.bufferTimes) { mutableStateOf(state.bufferTimes) }
     var sliderThreads by remember(state.searchThreads) { mutableStateOf(state.searchThreads) }
-    var danmuApiDialog by remember { mutableStateOf(false) }
 
     val listState = rememberScrollState()
     AppTopBarScaffold(
@@ -137,20 +136,6 @@ fun PreferenceSettingsScreen(onNavigateBack: () -> Unit, vm: SettingsViewModel =
                     )
                 }
                 SettingsCard(SettingsCardPosition.MIDDLE) {
-                    SettingsSwitchRow(
-                        title = stringResource(R.string.settings_danmu_switch),
-                        checked = state.danmuOpen,
-                        onCheckedChange = { vm.put(HawkConfig.DANMU_OPEN, it) },
-                    )
-                }
-                SettingsCard(SettingsCardPosition.MIDDLE) {
-                    SettingsRow(
-                        title = stringResource(R.string.settings_danmu_api),
-                        valueText = state.danmuApi.ifEmpty { stringResource(R.string.common_not_set) },
-                        onClick = { danmuApiDialog = true },
-                    )
-                }
-                SettingsCard(SettingsCardPosition.MIDDLE) {
                     SettingsSliderRow(
                         title = stringResource(R.string.settings_long_press_speed),
                         value = sliderSpeed.toFloat(),
@@ -199,18 +184,6 @@ fun PreferenceSettingsScreen(onNavigateBack: () -> Unit, vm: SettingsViewModel =
 
             Spacer(Modifier.height(64.dp))
         }
-    }
-
-    if (danmuApiDialog) {
-        TextEditDialog(
-            title = stringResource(R.string.settings_danmu_api),
-            initialText = state.danmuApi,
-            onDismiss = { danmuApiDialog = false },
-            onConfirm = { text ->
-                vm.put(HawkConfig.DANMU_API, text)
-                danmuApiDialog = false
-            },
-        )
     }
 }
 

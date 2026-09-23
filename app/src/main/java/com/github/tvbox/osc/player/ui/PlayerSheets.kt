@@ -19,13 +19,16 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -46,6 +49,7 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -202,6 +206,7 @@ private val FocusStroke = 2.dp
 internal fun SheetPanel(
     width: Dp,
     modifier: Modifier = Modifier,
+    scrollable: Boolean = false,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     Surface(
@@ -210,7 +215,18 @@ internal fun SheetPanel(
         color = MaterialTheme.colorScheme.surfaceContainer,
         shadowElevation = 6.dp,
     ) {
-        Column(content = content)
+        if (scrollable) {
+            // 内容可能超过一屏(如弹幕设置):限高 + 纵向滚动,否则底部被裁且滑不动
+            val maxHeight = (LocalConfiguration.current.screenHeightDp * 0.78f).dp
+            Column(
+                modifier = Modifier
+                    .heightIn(max = maxHeight)
+                    .verticalScroll(rememberScrollState()),
+                content = content,
+            )
+        } else {
+            Column(content = content)
+        }
     }
 }
 

@@ -95,6 +95,10 @@
     <string name="danmu_lines_value">%1$d lines</string>
     <string name="danmu_alpha">Danmaku Opacity</string>
     <string name="danmu_search_hint">Enter danmaku name</string>
+    <string name="danmu_online_subtitle">Use the danmaku API set in preferences</string>
+    <string name="danmu_subscribe_subtitle">Use the source-provided danmaku when no API is set</string>
+    <string name="danmu_platform_subtitle">Built-in danmaku sources for video platforms</string>
+    <string name="settings_danmu_subtitle">Switch, sources and appearance</string>
     <string name="toast_input_empty">Input cannot be empty</string>
     <string name="toast_danmu_not_found">No matching danmaku found</string>
 

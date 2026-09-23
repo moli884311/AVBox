@@ -50,6 +50,7 @@ import org.json.JSONObject;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -1236,26 +1237,49 @@ public class PlaybackController {
     }
 
     /**
-     * 弹幕选源(与进度键绑定:切集后旧结果作废):
-     * 订阅(取流结果直给地址,受订阅开关控制) → 在线(填写接口 → 接口自带 → 内置,受在线开关控制) → 平台(Phase 2)
+     * 弹幕选源(与进度键绑定:切集后旧结果作废)。来源与开关的对应关系:
+     *  - 在线弹幕:偏好设置填写的弹幕 API(未填写则用内置在线接口)
+     *  - 订阅弹幕:偏好设置未填写时,取流结果直给地址 / 接口自带 danmaku
+     *  - 平台弹幕:内置各视频平台弹幕源(见 PlatformDanmuEngine)
+     * 依次尝试,任一命中即停。
      */
     private void selectDanmu(String directDanmu, String key) {
-        String direct = DanmuHelper.isSubscribeEnabled() ? directDanmu : "";
-        if (!TextUtils.isEmpty(direct)) {
-            checkDanmu(direct, () -> {
-                if (TextUtils.equals(key, progressKey())) searchOnlineDanmu(key);
-            });
+        if (vod() == null || !DanmakuApi.canSearch(sourceBean())) {
+            checkDanmu("", null);
             return;
         }
-        checkDanmu("", null);
-        searchOnlineDanmu(key);
+        final List<DanmuSource> sources = new ArrayList<>();
+        String custom = DanmakuApi.getCustomApi();
+        if (!TextUtils.isEmpty(custom)) {
+            // 填写了弹幕 API:在线弹幕就是它
+            if (DanmuHelper.isOnlineEnabled()) sources.add(DanmuSource.search(custom));
+        } else {
+            // 没填写:订阅弹幕接管(取流直给 → 接口自带),最后才是内置在线兜底
+            if (DanmuHelper.isSubscribeEnabled()) {
+                if (!TextUtils.isEmpty(directDanmu)) sources.add(DanmuSource.direct(directDanmu));
+                String iface = DanmakuApi.getInterfaceApi();
+                if (!TextUtils.isEmpty(iface)) sources.add(DanmuSource.search(iface));
+            }
+            if (DanmuHelper.isOnlineEnabled()) sources.add(DanmuSource.search(DanmakuApi.getBuiltinApi()));
+        }
+        VodInfo.VodSeries series = currentSeries(vod().playFlag, vod().playIndex);
+        tryDanmuSource(sources, 0, vod().name, series == null ? "" : series.name, key);
     }
 
-    /** 在线弹幕:接口按 DanmakuApi.getApiUrl() 解析(填写接口 → 接口自带[受订阅开关] → 内置) */
-    private void searchOnlineDanmu(String key) {
-        if (!DanmuHelper.isOnlineEnabled() || vod() == null || !DanmakuApi.canSearch(sourceBean())) return;
-        VodInfo.VodSeries series = currentSeries(vod().playFlag, vod().playIndex);
-        DanmakuApi.search(vod().name, series == null ? "" : series.name, new DanmakuApi.SearchCallback() {
+    /** 顺序尝试候选来源:直给地址走 checkDanmu,接口来源走 searchWith;失败则试下一个 */
+    private void tryDanmuSource(List<DanmuSource> sources, int index, String name, String episode, String key) {
+        if (!TextUtils.equals(key, progressKey())) return;
+        if (index >= sources.size()) {
+            checkDanmu("", null);
+            return;
+        }
+        DanmuSource source = sources.get(index);
+        Runnable next = () -> tryDanmuSource(sources, index + 1, name, episode, key);
+        if (source.direct) {
+            checkDanmu(source.url, next);
+            return;
+        }
+        DanmakuApi.searchWith(source.url, name, episode, new DanmakuApi.SearchCallback() {
             @Override
             public void onFound(String url) {
                 if (!TextUtils.equals(key, progressKey())) return;
@@ -1264,17 +1288,34 @@ public class PlaybackController {
 
             @Override
             public void onNotFound() {
-                if (!TextUtils.equals(key, progressKey())) return;
-                checkDanmu("", null);
+                next.run();
             }
         });
+    }
+
+    private static class DanmuSource {
+        final String url;
+        final boolean direct;
+
+        DanmuSource(String url, boolean direct) {
+            this.url = url;
+            this.direct = direct;
+        }
+
+        static DanmuSource search(String url) {
+            return new DanmuSource(url, false);
+        }
+
+        static DanmuSource direct(String url) {
+            return new DanmuSource(url, true);
+        }
     }
 
     private void checkDanmu(String danmaku, Runnable onFailed) {
         if (view != null) view.checkDanmu(danmaku, onFailed);
     }
 
-    /** 弹幕来源开关变更后按 订阅→在线→平台 重新选源(平台来源见 PlatformDanmuEngine) */
+    /** 弹幕来源开关变更后重新按开关选源(平台来源见 PlatformDanmuEngine) */
     public void reselectDanmu() {
         selectDanmu(lastSubscribeDanmu, progressKey());
     }

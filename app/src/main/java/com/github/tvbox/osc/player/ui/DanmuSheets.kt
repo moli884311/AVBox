@@ -48,7 +48,7 @@ private val DANMU_SPEEDS = listOf(2.4f, 1.8f, 1.5f, 1.0f)
 fun DanmuSettingSheet(sheet: DanmuSettingSheetState, onDismiss: () -> Unit) {
     PlayerDialog(onDismiss = onDismiss) {
         val dismissThen = LocalPlayerSheetDismissThen.current
-        SheetPanel(width = playerDim(R.dimen.vs_520)) {
+        SheetPanel(width = playerDim(R.dimen.vs_520), scrollable = true) {
             Spacer(Modifier.height(playerDim(R.dimen.vs_24)))
             SheetTitle(stringResource(R.string.danmu_settings))
             Spacer(Modifier.height(playerDim(R.dimen.vs_12)))

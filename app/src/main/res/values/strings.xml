@@ -95,6 +95,10 @@
     <string name="danmu_lines_value">%1$d 行</string>
     <string name="danmu_alpha">弹幕透明</string>
     <string name="danmu_search_hint">请输入弹幕名称</string>
+    <string name="danmu_online_subtitle">使用偏好设置里填写的弹幕 API</string>
+    <string name="danmu_subscribe_subtitle">未填写弹幕 API 时，使用接口自带弹幕</string>
+    <string name="danmu_platform_subtitle">内置各视频平台弹幕源</string>
+    <string name="settings_danmu_subtitle">弹幕开关、来源与外观</string>
     <string name="toast_input_empty">输入内容不能为空</string>
     <string name="toast_danmu_not_found">未查询到匹配弹幕</string>
 
