@@ -15,11 +15,11 @@ android {
     ndkVersion = libs.versions.ndk.get()
 
     defaultConfig {
-        applicationId = "com.github.avbox.osc"
+        applicationId = "com.moliys.shell"
         minSdk = libs.versions.minSdk.get().toInt()
         targetSdk = libs.versions.targetSdk.get().toInt()
-        versionCode = 12
-        versionName = "1.1.1"
+        versionCode = 1
+        versionName = "1.0.0"
         multiDexEnabled = true
         ndk {
             abiFilters += setOf("arm64-v8a")
@@ -113,11 +113,11 @@ ksp {
     arg("room.schemaLocation", "$projectDir/schemas")
 }
 
-// APK 按 AVBox_<buildType>.apk 命名(替代 AGP 9 已移除的 applicationVariants 旧 API)
+// APK 按 moliys-shell_<buildType>.apk 命名(替代 AGP 9 已移除的 applicationVariants 旧 API)
 androidComponents {
     onVariants { variant ->
         variant.outputs.forEach { output ->
-            output.outputFileName.set("AVBox_${variant.buildType}.apk")
+            output.outputFileName.set("moliys-shell_${variant.buildType}.apk")
         }
     }
 }
