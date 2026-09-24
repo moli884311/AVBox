@@ -2,9 +2,11 @@ package com.github.tvbox.osc.player.ui
 
 import android.content.res.Resources
 import android.util.TypedValue
+import android.view.KeyEvent as AndroidKeyEvent
 import androidx.annotation.DimenRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -23,7 +25,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.key.KeyEvent
+import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.input.pointer.pointerInput
@@ -42,6 +48,7 @@ import com.github.tvbox.osc.R
 import com.github.tvbox.osc.player.state.PlayerActions
 import com.github.tvbox.osc.player.state.PlayerUiState
 import com.github.tvbox.osc.ui.components.ScallopShape
+import com.github.tvbox.osc.ui.tv.rememberIsTelevision
 import kotlin.math.roundToInt
 import kotlinx.coroutines.delay
 import xyz.doikki.videoplayer.player.VideoView
@@ -58,7 +65,32 @@ fun PlayerOverlay(
     state: PlayerUiState,
     actions: PlayerActions,
 ) {
-    Box(Modifier.fillMaxSize()) {
+    val isTv = rememberIsTelevision()
+    val rootFocus = remember { FocusRequester() }
+    val sheetOpen = state.selectDialog != null ||
+        state.danmuSettingSheet != null || state.danmuSearchSheet != null ||
+        state.subtitleSheet != null || state.subtitleSearchSheet != null ||
+        state.castSheet != null
+    // TV:控制层隐藏时把焦点收回根节点,方向键/确认键走全局播控;
+    // 控制层展开时不抢焦点,交给焦点系统在按钮间移动
+    LaunchedEffect(isTv, state.controlsVisible) {
+        if (isTv && !state.controlsVisible) runCatching { rootFocus.requestFocus() }
+    }
+
+    Box(
+        Modifier
+            .fillMaxSize()
+            .then(
+                if (isTv) {
+                    Modifier
+                        .focusRequester(rootFocus)
+                        .focusable()
+                        .onKeyEvent { ev -> handlePlayerTvKey(ev, state, actions, sheetOpen) }
+                } else {
+                    Modifier
+                }
+            )
+    ) {
         PlayerTopBar(state, actions)
         // 旧 XML bottom_container 为 layout_gravity="bottom"（BoxScope 内显式贴底）
         PlayerBottomBar(state, actions, Modifier.align(Alignment.BottomCenter))
@@ -118,6 +150,69 @@ fun PlayerOverlay(
             actions.refreshSystemInfo()
             delay(1000)
         }
+    }
+}
+
+/**
+ * 遥控器按键路由(仅 TV 生效)。走冒泡阶段,按钮/弹层先消费,未被消费的才落到这里。
+ *
+ * <p>映射:左右快退/快进([PlayerActions.onSeekStep]);确认键在控制层隐藏时唤出、展开时播放/暂停;
+ * 媒体键播放暂停/上下一集;MENU 显隐控制层;BACK 控制层展开时先收起、否则放行退出。
+ * 上/下不消费,交给焦点系统在控制按钮间移动。
+ */
+private fun handlePlayerTvKey(
+    event: KeyEvent,
+    state: PlayerUiState,
+    actions: PlayerActions,
+    sheetOpen: Boolean,
+): Boolean {
+    val native = event.nativeKeyEvent
+    if (native.action != AndroidKeyEvent.ACTION_DOWN) return false
+    if (sheetOpen) return false // 弹层优先,不抢其按键
+    if (state.locked) return false // 锁屏下不响应播控按键,避免误操作
+
+    return when (native.keyCode) {
+        AndroidKeyEvent.KEYCODE_DPAD_LEFT -> {
+            actions.onSeekStep(-1)
+            true
+        }
+        AndroidKeyEvent.KEYCODE_DPAD_RIGHT -> {
+            actions.onSeekStep(1)
+            true
+        }
+        AndroidKeyEvent.KEYCODE_DPAD_CENTER,
+        AndroidKeyEvent.KEYCODE_ENTER,
+        AndroidKeyEvent.KEYCODE_NUMPAD_ENTER -> {
+            if (!state.controlsVisible) actions.toggleControls() else actions.onPlayPauseClicked()
+            true
+        }
+        AndroidKeyEvent.KEYCODE_MEDIA_PLAY_PAUSE,
+        AndroidKeyEvent.KEYCODE_MEDIA_PLAY,
+        AndroidKeyEvent.KEYCODE_MEDIA_PAUSE -> {
+            actions.onPlayPauseClicked()
+            true
+        }
+        AndroidKeyEvent.KEYCODE_MEDIA_NEXT -> {
+            actions.onNextClicked()
+            true
+        }
+        AndroidKeyEvent.KEYCODE_MEDIA_PREVIOUS -> {
+            actions.onPreClicked()
+            true
+        }
+        AndroidKeyEvent.KEYCODE_MENU -> {
+            actions.toggleControls()
+            true
+        }
+        AndroidKeyEvent.KEYCODE_BACK -> {
+            if (state.controlsVisible) {
+                actions.toggleControls()
+                true
+            } else {
+                false
+            }
+        }
+        else -> false
     }
 }
 
