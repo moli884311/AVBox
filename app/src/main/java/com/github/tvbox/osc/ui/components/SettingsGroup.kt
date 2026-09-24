@@ -4,6 +4,7 @@ import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,7 +27,9 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -35,6 +38,7 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.github.tvbox.osc.ui.theme.cardContainer
+import com.github.tvbox.osc.ui.tv.tvFocusableCard
 
 enum class SettingsCardPosition {
     SINGLE,
@@ -98,13 +102,25 @@ fun SettingsRow(
     iconRes: Int? = null,
     onClick: (() -> Unit)? = null,
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
     Row(
         modifier = modifier
             .fillMaxWidth()
             .heightIn(min = 64.dp)
             .then(
                 if (onClick != null) {
-                    Modifier.clickable(enabled = enabled, onClick = onClick)
+                    Modifier
+                        .clickable(
+                            interactionSource = interactionSource,
+                            indication = ripple(),
+                            enabled = enabled,
+                            onClick = onClick,
+                        )
+                        .tvFocusableCard(
+                            interactionSource = interactionSource,
+                            cornerRadius = 12.dp,
+                            focusedScale = 1f,
+                        )
                 } else {
                     Modifier
                 }
@@ -214,13 +230,25 @@ fun SettingsSwitchRow(
     valueText: String? = null,
     enabled: Boolean = true,
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
     Row(
         modifier = modifier
             .fillMaxWidth()
             .heightIn(min = 64.dp)
             .then(
                 if (onCheckedChange != null) {
-                    Modifier.clickable(enabled = enabled, onClick = { onCheckedChange(!checked) })
+                    Modifier
+                        .clickable(
+                            interactionSource = interactionSource,
+                            indication = ripple(),
+                            enabled = enabled,
+                            onClick = { onCheckedChange(!checked) },
+                        )
+                        .tvFocusableCard(
+                            interactionSource = interactionSource,
+                            cornerRadius = 12.dp,
+                            focusedScale = 1f,
+                        )
                 } else {
                     Modifier
                 }
@@ -251,13 +279,21 @@ fun SettingsOptionRow(
     trailing: (@Composable () -> Unit)? = null,
     onLongClick: (() -> Unit)? = null,
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
     Row(
         modifier = modifier
             .fillMaxWidth()
             .heightIn(min = 56.dp)
             .combinedClickable(
+                interactionSource = interactionSource,
+                indication = ripple(),
                 onClick = onClick,
                 onLongClick = onLongClick,
+            )
+            .tvFocusableCard(
+                interactionSource = interactionSource,
+                cornerRadius = 12.dp,
+                focusedScale = 1f,
             )
             .padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
