@@ -57,6 +57,11 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.ContentDrawScope
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -209,6 +214,8 @@ private fun MainContent() {
     val liquidBackdrop = rememberLayerBackdrop(onDraw = liquidBackdropOnDraw)
     val density = LocalDensity.current
     val layoutDirection = LocalLayoutDirection.current
+    // TV 布局判据(横屏侧栏 + 按键路由 + overscan 共用,只取一次)
+    val isTvLayout = rememberIsTelevision()
 
     // 导航形态:Compact 用底部横条,Medium/Expanded 用侧边竖条(判据集中在 NavMetrics,见 spec §4.11)
     val navAxis = NavMetrics.axisFor(currentWindowWidthClass())
@@ -217,6 +224,26 @@ private fun MainContent() {
     val surfaceNavVisible = !liquidGlassEnabled
     val navBarsPadding = WindowInsets.navigationBars.asPaddingValues()
     val navBandExtent = NavMetrics.BAND_EXTENT_DP.dp
+    // TV:焦点落在导航栏上时,朝"内容侧"的方向键直接跨到内容区。
+    // 几何搜索跨不过覆盖层/Scaffold 这类兄弟节点(实测在侧边栏上按右键切不进主内容),
+    // 这里用预览按键显式路由,保证任何形态下都能进出。
+    val navFocusBridge: Modifier = if (isTvLayout) {
+        Modifier.onPreviewKeyEvent { event ->
+            if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
+            val towardContent = when (navAxis) {
+                NavAxis.Vertical -> event.key == Key.DirectionRight
+                NavAxis.Horizontal -> event.key == Key.DirectionUp
+            }
+            if (towardContent) {
+                contentFocusRequester.requestFocus()
+                true
+            } else {
+                false
+            }
+        }
+    } else {
+        Modifier
+    }
     val liquidBackdropBounds: (Size) -> Rect? = remember(density, navBandExtent, navAxis) {
         { size ->
             val extentPx = with(density) { navBandExtent.toPx() }
@@ -231,7 +258,7 @@ private fun MainContent() {
     // 否则背景被缩到导航栏之上,玻璃就取不到内容、退化成一块纯色
     val navReserve = NavMetrics.reserveDp(liquidGlassEnabled, navAxis).dp
     // TV overscan:电视普遍裁掉边缘约 5%,关键内容留出安全边距(手机端为 0)
-    val overscan = if (rememberIsTelevision()) TV_OVERSCAN_DP.dp else 0.dp
+    val overscan = if (isTvLayout) TV_OVERSCAN_DP.dp else 0.dp
     val pageContentPadding: PaddingValues = when {
         railMode -> PaddingValues(
             start = navReserve + navBarsPadding.calculateStartPadding(layoutDirection) + overscan,
@@ -368,22 +395,24 @@ private fun MainContent() {
                         ),
                 )
                 Box(
-                    modifier = if (navAxis == NavAxis.Horizontal) {
-                        Modifier
-                            .align(Alignment.BottomCenter)
-                            .fillMaxWidth()
-                            .windowInsetsPadding(WindowInsets.navigationBars)
-                            .padding(horizontal = 16.dp + overscan)
-                            .padding(bottom = NavMetrics.MARGIN_DP.dp + overscan)
-                    } else {
-                        Modifier
-                            .align(Alignment.CenterStart)
-                            .fillMaxHeight()
-                            // 竖条是满高的,上下都要让:只用 navigationBars 会顶到状态栏里
-                            .windowInsetsPadding(WindowInsets.systemBars)
-                            .padding(vertical = 16.dp + overscan)
-                            .padding(start = NavMetrics.MARGIN_DP.dp + overscan)
-                    },
+                    modifier = (
+                        if (navAxis == NavAxis.Horizontal) {
+                            Modifier
+                                .align(Alignment.BottomCenter)
+                                .fillMaxWidth()
+                                .windowInsetsPadding(WindowInsets.navigationBars)
+                                .padding(horizontal = 16.dp + overscan)
+                                .padding(bottom = NavMetrics.MARGIN_DP.dp + overscan)
+                        } else {
+                            Modifier
+                                .align(Alignment.CenterStart)
+                                .fillMaxHeight()
+                                // 竖条是满高的,上下都要让:只用 navigationBars 会顶到状态栏里
+                                .windowInsetsPadding(WindowInsets.systemBars)
+                                .padding(vertical = 16.dp + overscan)
+                                .padding(start = NavMetrics.MARGIN_DP.dp + overscan)
+                        }
+                        ).then(navFocusBridge),
                 ) {
                     FloatingNavBar(
                         backdrop = liquidBackdrop,
@@ -405,7 +434,8 @@ private fun MainContent() {
                     modifier = Modifier
                         .align(Alignment.CenterStart)
                         .fillMaxHeight()
-                        .windowInsetsPadding(WindowInsets.systemBars),
+                        .windowInsetsPadding(WindowInsets.systemBars)
+                        .then(navFocusBridge),
                     containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                 ) {
                     AppTab.entries.forEachIndexed { index, tab ->

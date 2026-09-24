@@ -6,6 +6,7 @@ import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.gestures.DraggableState
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.draggable
@@ -43,14 +44,19 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusProperties
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.dp
+import com.github.tvbox.osc.ui.tv.LocalIsTelevision
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -296,9 +302,21 @@ private fun SheetOverlay(
     val keyboard = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
 
+    // 弹层是同一组合内的覆盖层(不是独立窗口),系统不会自动把焦点搬进来;
+    // TV 上必须显式把焦点落到面板,否则方向键仍在底层页面上乱跑 —— 表现为"弹层没适配遥控器"。
+    val isTv = LocalIsTelevision.current
+    val panelFocusRequester = remember { FocusRequester() }
+
     LaunchedEffect(Unit) {
         collapse.animateTo(0f, tween(durationMs))
         entered = true
+    }
+
+    LaunchedEffect(entered) {
+        if (entered && isTv) {
+            withFrameNanos { }
+            runCatching { panelFocusRequester.requestFocus() }
+        }
     }
 
     /**
@@ -358,6 +376,10 @@ private fun SheetOverlay(
                 .fillMaxSize()
                 .graphicsLayer { alpha = 1f - collapse.value }
                 .background(scrimColor)
+                // clickable 会让遮罩成为可聚焦节点(且铺满全屏),TV 上会截胡所有方向键,
+                // 焦点看起来"卡住"、弹层内容永远进不去。遮罩只负责触摸,禁止参与焦点。
+                // focusProperties 必须写在 clickable(内部 focusable)之前才作用于它。
+                .focusProperties { canFocus = false }
                 .clickable(
                     // 不可关闭时仍要吃掉触摸(保持模态),只是什么都不做
                     enabled = entered,
@@ -387,6 +409,10 @@ private fun SheetOverlay(
                     )
                     .fillMaxWidth()
                     .heightIn(max = panelMaxHeight)
+                    // 把面板做成一个焦点组:TV 上 requestFocus 会直接落到组内第一个可聚焦子项,
+                    // 方向键进来也不会先停在"面板本身"这道空焦点上。
+                    .focusRequester(panelFocusRequester)
+                    .focusGroup()
                     .graphicsLayer {
                         if (centered) {
                             val progress = 1f - collapse.value

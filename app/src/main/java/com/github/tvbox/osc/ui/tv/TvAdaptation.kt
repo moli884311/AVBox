@@ -1,8 +1,6 @@
 package com.github.tvbox.osc.ui.tv
 
-import android.app.UiModeManager
 import android.content.Context
-import android.content.res.Configuration
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
@@ -32,20 +30,21 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.github.tvbox.osc.util.ScreenUtils
 
 /**
  * 当前设备是否处于 Android TV 模式。
  *
- * 判据与 [com.github.tvbox.osc.util.ScreenUtils.isTv] 完全一致(只认
- * `UiModeManager.getCurrentModeType() == TELEVISION`,不靠屏幕尺寸猜),
- * 在 [com.github.tvbox.osc.ui.theme.AVBoxTheme] 里统一下发,供全应用读取。
+ * 判据与 [com.github.tvbox.osc.util.ScreenUtils.isTv] 完全一致(直接委托,不再各写一份):
+ * 先认 `UiModeManager.getCurrentModeType() == TELEVISION`,非认证盒子会把 UI_MODE 报成 NORMAL,
+ * 再兜底认 `android.software.leanback` 特性。在 [com.github.tvbox.osc.ui.theme.AVBoxTheme] 里统一下发。
+ *
+ * ⚠️ 曾经这里只认 UI_MODE,导致"横屏(BASE 层判 TV)"与"Compose 层判非 TV"不一致:
+ * 焦点描边/按键路由/overscan 整套 TV 适配在非认证盒子上全部静默失效。
  */
 val LocalIsTelevision = staticCompositionLocalOf { false }
 
-fun isTelevision(context: Context): Boolean {
-    val uiModeManager = context.getSystemService(Context.UI_MODE_SERVICE) as? UiModeManager
-    return uiModeManager?.currentModeType == Configuration.UI_MODE_TYPE_TELEVISION
-}
+fun isTelevision(context: Context): Boolean = ScreenUtils.isTv(context)
 
 @Composable
 fun rememberIsTelevision(): Boolean {

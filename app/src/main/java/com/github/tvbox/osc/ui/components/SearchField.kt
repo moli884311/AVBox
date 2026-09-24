@@ -23,13 +23,21 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.github.tvbox.osc.R
 import com.github.tvbox.osc.ui.theme.cardContainer
+import com.github.tvbox.osc.ui.tv.LocalIsTelevision
 import com.github.tvbox.osc.ui.tv.tvClickable
 import com.kyant.capsule.ContinuousCapsule
 
@@ -44,6 +52,10 @@ fun SearchField(
     trailing: (@Composable () -> Unit)? = null,
 ) {
     val clearInteraction = remember { MutableInteractionSource() }
+    // TV:输入框会把上下方向键吃掉当光标移动用,焦点因此被锁在输入框里、下面的
+    // 搜索历史/热搜榜永远够不着。预览阶段截下"下",主动把焦点搜到下方内容。
+    val focusManager = LocalFocusManager.current
+    val isTv = LocalIsTelevision.current
     val glass = if (LocalTopBarGlassBackdrop.current != null) {
         Modifier.glassTopBarSurface(ContinuousCapsule, MaterialTheme.colorScheme.cardContainer)
     } else {
@@ -52,6 +64,14 @@ fun SearchField(
     Row(
         modifier = modifier
             .then(glass)
+            .onPreviewKeyEvent { event ->
+                if (isTv && event.type == KeyEventType.KeyDown && event.key == Key.DirectionDown) {
+                    focusManager.moveFocus(FocusDirection.Down)
+                    true
+                } else {
+                    false
+                }
+            }
             .padding(horizontal = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
