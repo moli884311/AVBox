@@ -45,7 +45,7 @@ private val HeroMaxSidePad = 96.dp
 private val HeroMaxWidth = 640.dp
 
 /** Hero 高度上限:与宽度上限共同约束,宽屏下高度约 340dp(未封顶时实测 544dp,占屏高 72%) */
-private val HeroMaxHeight = 340.dp
+internal val HeroMaxHeight = 340.dp
 
 @Composable
 fun HeroCarousel(
@@ -75,9 +75,12 @@ fun HeroCarousel(
                 // 宽屏下封顶并居中。不封顶有两宗罪:①按 1.5 宽高比撑满整屏;
                 // ②相邻页缩放后边缘内移量随宽度变大,只从左侧缝里露出几 dp,看着像一条随机黑条
                 .wrapContentWidth(Alignment.CenterHorizontally)
-                .widthIn(max = HeroMaxWidth)
-                .aspectRatio(1.5f)
+                // ⚠️ heightIn 必须排在 aspectRatio 之前:aspectRatio 会先用 maxWidth 算出 640x427,
+                // 排在其后的 heightIn 只约束子节点、不会把外层尺寸收回来 ⇒ 高度上限形同虚设,
+                // Hero 占掉大半屏、下面的影片行被挤出可视区(电视上表现为"一屏就 1 张卡")
                 .heightIn(max = HeroMaxHeight)
+                .aspectRatio(1.5f)
+                .widthIn(max = HeroMaxWidth)
                 .graphicsLayer {
                     val pageOffset =
                         (pagerState.currentPage - page) + pagerState.currentPageOffsetFraction

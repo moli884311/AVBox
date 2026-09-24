@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -82,6 +83,7 @@ import com.github.tvbox.osc.ui.activity.PartitionListActivity
 import com.github.tvbox.osc.ui.activity.SearchActivity
 import com.github.tvbox.osc.ui.components.AVBoxBottomSheet
 import com.github.tvbox.osc.ui.components.HeroCarousel
+import com.github.tvbox.osc.ui.components.HeroMaxHeight
 import com.github.tvbox.osc.ui.components.LoadState
 import com.github.tvbox.osc.ui.components.AppTopBarScaffold
 import com.github.tvbox.osc.ui.components.LoadStateBox
@@ -308,7 +310,9 @@ fun HomePage(vm: HomeViewModel, contentPadding: PaddingValues = PaddingValues(0.
                     } else if (rec.state == HomeViewModel.PartitionState.Loading) {
                         SkeletonBox(
                             modifier = Modifier
-                                .fillParentMaxWidth(0.78f)
+                                .fillMaxWidth()
+                                .wrapContentWidth(Alignment.CenterHorizontally)
+                                .heightIn(max = HeroMaxHeight)
                                 .aspectRatio(1.5f)
                                 .clip(RoundedCornerShape(24.dp)),
                             shape = RoundedCornerShape(24.dp),
@@ -316,7 +320,9 @@ fun HomePage(vm: HomeViewModel, contentPadding: PaddingValues = PaddingValues(0.
                     } else if (rec.state == HomeViewModel.PartitionState.Error) {
                         Box(
                             modifier = Modifier
-                                .fillParentMaxWidth(0.78f)
+                                .fillMaxWidth()
+                                .wrapContentWidth(Alignment.CenterHorizontally)
+                                .heightIn(max = HeroMaxHeight)
                                 .aspectRatio(1.5f)
                                 .clip(RoundedCornerShape(24.dp))
                                 .background(MaterialTheme.colorScheme.surfaceBright),
