@@ -6,7 +6,6 @@ import androidx.annotation.Nullable;
 import com.github.tvbox.osc.util.LOG;
 import com.github.tvbox.osc.util.kvcodec.KVDecoder;
 import com.github.tvbox.osc.util.kvcodec.KVLog;
-import com.tencent.mmkv.MMKV;
 
 /**
  * 业务侧 KV 门面内部使用的 Android 胶水:MMKV 取原始值 + `echo-kv` 日志,类型恢复委托给
@@ -49,7 +48,7 @@ public final class KVCodec {
      * (2026-09-13 实测:一轮启动刷出 2.9 万行,把有效日志全淹了)。
      */
     @Nullable
-    public static <T> T decode(@NonNull String key, @NonNull MMKV store, @Nullable T defaultValue) {
+    public static <T> T decode(@NonNull String key, @NonNull KvStore store, @Nullable T defaultValue) {
         if (!store.containsKey(key)) return defaultValue; // 键不存在属正常路径,不打日志
         String raw = store.decodeString(key);
         if (raw == null) return defaultValue; // 存在但取不到字符串值:按"读不到"处理,同样不刷日志

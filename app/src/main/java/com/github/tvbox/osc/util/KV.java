@@ -6,7 +6,9 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.github.tvbox.osc.util.kv.KVCodec;
-import com.tencent.mmkv.MMKV;
+import com.github.tvbox.osc.util.kv.KvStore;
+import com.github.tvbox.osc.util.kv.MmkvStore;
+import com.github.tvbox.osc.util.kv.PrefsStore;
 
 /**
  * 全项目键值存储门面(2026-09-13 起为唯一实现,取代 Hawk,见 skill/avbox-kv-mmkv-spec.md)。
@@ -17,13 +19,13 @@ import com.tencent.mmkv.MMKV;
  * <p>与旧 Hawk 实现的关键差别:① 类型推断不再靠匿名 TypeToken 捕获类型变量(该写法在 gson 2.13+ 直接抛异常,
  * 是旧集合键全读不出的根因);② 写入失败返回 false 并打 `echo-kv` 日志,不再静默。
  *
- * <p>实例为单进程模式、不加密(spec §4.4):明文 mmap 落在应用私有目录。
+ * <p>实例为单进程模式、不加密(spec §4.4):明文落在应用私有目录(64 位为 MMKV mmap,32 位为 SharedPreferences)。
  */
 public final class KV {
 
     private static final String MMAP_ID = "avbox_kv";
 
-    private static MMKV store;
+    private static KvStore store;
 
     private KV() {
     }
@@ -32,17 +34,24 @@ public final class KV {
      * 初始化存储。必须在任何 get/put 之前调用,见 {@code App.initParams}。
      *
      * <p>无数据迁移:应用未发布、无存量用户,Hawk 与其旧库已一并移除(见 spec §8 R1/R2),
-     * 首装即原生 MMKV,旧库数据不再搬运。
+     * 首装即原生存储后端(默认 MMKV),旧库数据不再搬运。
      *
      * <p>⚠️ 关于"崩溃路径必须落盘":MMKV 是**异步写**(写进 Scheduler,约 1 秒后落盘),且 2.4.2
      * **没有**同步写 flag(只有 {@code SINGLE_PROCESS_MODE} 等模式位),{@code sync()} 也只是等
      * "当前 pending 批"。实测进程级崩溃处理里写的崩溃时刻 **没落盘**(设备上一直停在几分钟前)
      * ⇒ 需要绝对可靠的崩溃记录不能走 KV,见 {@link BootGuard} 的同步标记文件。
+     *
+     * <p>后端按进程位数选择:64 位走 MMKV 2.4.2(arm64 16KB 页对齐);32 位无 MMKV 原生库
+     * (MMKV 自 2.0.0 起不再提供 armeabi-v7a),退回 SharedPreferences,见 {@link KvStore}。
      */
     public static void init(@NonNull Context context) {
         Context appContext = context.getApplicationContext();
-        MMKV.initialize(appContext == null ? context : appContext);
-        store = MMKV.mmkvWithID(MMAP_ID, MMKV.SINGLE_PROCESS_MODE);
+        Context base = appContext == null ? context : appContext;
+        if (android.os.Process.is64Bit()) {
+            store = MmkvStore.create(base, MMAP_ID);
+        } else {
+            store = new PrefsStore(base.getSharedPreferences(MMAP_ID, Context.MODE_PRIVATE));
+        }
     }
 
     /**
@@ -53,7 +62,7 @@ public final class KV {
      * 调用方普遍不检查"的直接修正,spec §4.6)。value 为 null 时语义同 Hawk —— 删除该键。
      */
     public static <T> boolean put(@NonNull String key, @Nullable T value) {
-        MMKV instance = requireStore();
+        KvStore instance = requireStore();
         if (value == null) {
             instance.removeValueForKey(key);
             return true;
@@ -102,8 +111,8 @@ public final class KV {
 
     /** 先于 {@link #init} 调用属编码错误:故意抛异常,避免静默降级成"到处读默认值" */
     @NonNull
-    private static MMKV requireStore() {
-        MMKV instance = store;
+    private static KvStore requireStore() {
+        KvStore instance = store;
         if (instance == null) throw new IllegalStateException("KV.init(Context) 未调用"); // i18n: keep(异常消息)
         return instance;
     }
