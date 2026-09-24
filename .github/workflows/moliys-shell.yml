@@ -80,10 +80,10 @@ jobs:
           APK="$(find app/build/outputs/apk -name '*.apk' | head -n1)"
           [ -n "$APK" ] || { echo "::error::找不到 release APK"; exit 1; }
           echo "APK=$APK size=$(stat -c%s "$APK")"
-          LIST="$(unzip -l "$APK")"
+          unzip -l "$APK" | awk '{print $4}' > /tmp/apk_entries.txt
           for abi in arm64-v8a armeabi-v7a; do
             for lib in libplayer.so libijksdl.so libxl_thunder_sdk.so libp2p.so; do
-              echo "$LIST" | grep -q "lib/$abi/$lib" || { echo "::error::$abi 缺少 $lib"; exit 1; }
+              grep -qx "lib/$abi/$lib" /tmp/apk_entries.txt || { echo "::error::$abi 缺少 $lib"; exit 1; }
             done
             echo "  $abi: 原生库齐全"
           done
