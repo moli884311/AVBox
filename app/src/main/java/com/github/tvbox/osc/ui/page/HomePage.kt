@@ -99,6 +99,7 @@ import com.github.tvbox.osc.ui.components.glassTopBarSurface
 import com.github.tvbox.osc.ui.components.rememberVodCardMenuState
 import com.github.tvbox.osc.ui.theme.cardContainer
 import com.github.tvbox.osc.ui.tv.tvClickable
+import com.github.tvbox.osc.ui.tv.tvControlFocus
 import com.github.tvbox.osc.util.HomeSettings
 import com.github.tvbox.osc.util.SiteSearch
 import com.kyant.capsule.ContinuousCapsule
@@ -263,7 +264,10 @@ fun HomePage(vm: HomeViewModel, contentPadding: PaddingValues = PaddingValues(0.
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            TextButton(onClick = { ConfigManageActivity.start(context) }) {
+                            TextButton(
+                                onClick = { ConfigManageActivity.start(context) },
+                                modifier = Modifier.tvControlFocus(cornerRadius = 20.dp),
+                            ) {
                                 Text(stringResource(R.string.config_add_subscribe))
                             }
                         }
@@ -608,7 +612,10 @@ private fun PartitionSection(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.weight(1f),
                     )
-                    TextButton(onClick = { onRetry?.invoke() }) {
+                    TextButton(
+                        onClick = { onRetry?.invoke() },
+                        modifier = Modifier.tvControlFocus(cornerRadius = 20.dp),
+                    ) {
                         Text(text = stringResource(R.string.common_retry))
                     }
                 }

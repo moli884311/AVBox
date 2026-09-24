@@ -44,6 +44,7 @@ import com.github.tvbox.osc.ui.components.AppTopBarScaffold
 import com.github.tvbox.osc.ui.components.LocalSheetDismissThen
 import com.github.tvbox.osc.ui.components.TopBarActionBox
 import com.github.tvbox.osc.ui.tv.tvClickable
+import com.github.tvbox.osc.ui.tv.tvControlFocus
 import com.github.tvbox.osc.util.DanmuSourceStore
 import com.github.tvbox.osc.util.DanmakuSpeedTester
 import kotlinx.coroutines.Dispatchers
@@ -235,7 +236,10 @@ private fun SourceRow(
                 overflow = TextOverflow.Ellipsis,
             )
         }
-        TextButton(onClick = onTest) {
+        TextButton(
+            onClick = onTest,
+            modifier = Modifier.tvControlFocus(cornerRadius = 16.dp),
+        ) {
             Text(
                 text = when {
                     item.latency > 0L -> stringResource(R.string.danmu_api_ms, item.latency)
@@ -244,7 +248,10 @@ private fun SourceRow(
                 },
             )
         }
-        IconButton(onClick = onDelete) {
+        IconButton(
+            onClick = onDelete,
+            modifier = Modifier.tvControlFocus(cornerRadius = 20.dp),
+        ) {
             Icon(
                 painter = painterResource(R.drawable.ic_delete),
                 contentDescription = stringResource(R.string.common_delete),
@@ -256,7 +263,11 @@ private fun SourceRow(
 
 @Composable
 private fun BottomAction(text: String, enabled: Boolean, onClick: () -> Unit) {
-    TextButton(onClick = onClick, enabled = enabled) { Text(text) }
+    TextButton(
+        onClick = onClick,
+        enabled = enabled,
+        modifier = Modifier.tvControlFocus(cornerRadius = 20.dp),
+    ) { Text(text) }
 }
 
 @Composable
@@ -290,12 +301,16 @@ private fun AddSourceDialog(onDismiss: () -> Unit, onConfirm: (String, String) -
             TextButton(
                 enabled = url.isNotBlank(),
                 onClick = { dismissThen { onConfirm(name.trim(), url.trim()) } },
+                modifier = Modifier.tvControlFocus(cornerRadius = 20.dp),
             ) {
                 Text(stringResource(R.string.common_confirm))
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) }
+            TextButton(
+                onClick = onDismiss,
+                modifier = Modifier.tvControlFocus(cornerRadius = 20.dp),
+            ) { Text(stringResource(R.string.common_cancel)) }
         },
     )
 }

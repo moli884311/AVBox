@@ -62,6 +62,7 @@ import com.github.tvbox.osc.ui.components.SettingsCardPosition
 import com.github.tvbox.osc.ui.components.SettingsGroup
 import com.github.tvbox.osc.ui.components.SettingsOptionMenuRow
 import com.github.tvbox.osc.ui.components.SettingsRow
+import com.github.tvbox.osc.ui.tv.tvControlFocus
 import com.github.tvbox.osc.ui.activity.ConfigManageActivity
 import com.github.tvbox.osc.ui.activity.DanmuSettingsActivity
 import com.github.tvbox.osc.ui.activity.PlaySettingsActivity
@@ -462,7 +463,10 @@ fun SettingsPage(
             title = { Text(stringResource(R.string.settings_check_update)) },
             text = { Text(stringResource(R.string.update_latest)) },
             confirmButton = {
-                TextButton(onClick = { updateStage = UpdateStage.Idle }) {
+                TextButton(
+                    onClick = { updateStage = UpdateStage.Idle },
+                    modifier = Modifier.tvControlFocus(cornerRadius = 20.dp),
+                ) {
                     Text(stringResource(R.string.common_confirm))
                 }
             },
@@ -481,12 +485,18 @@ fun SettingsPage(
                 )
             },
             confirmButton = {
-                TextButton(onClick = { startUpdateDownload(stage.info) }) {
+                TextButton(
+                    onClick = { startUpdateDownload(stage.info) },
+                    modifier = Modifier.tvControlFocus(cornerRadius = 20.dp),
+                ) {
                     Text(stringResource(R.string.update_now))
                 }
             },
             dismissButton = {
-                TextButton(onClick = { updateStage = UpdateStage.Idle }) {
+                TextButton(
+                    onClick = { updateStage = UpdateStage.Idle },
+                    modifier = Modifier.tvControlFocus(cornerRadius = 20.dp),
+                ) {
                     Text(stringResource(R.string.update_later))
                 }
             },
@@ -518,7 +528,10 @@ fun SettingsPage(
             title = { Text(stringResource(R.string.settings_check_update)) },
             text = { Text(stringResource(R.string.update_check_failed)) },
             confirmButton = {
-                TextButton(onClick = { updateStage = UpdateStage.Idle }) {
+                TextButton(
+                    onClick = { updateStage = UpdateStage.Idle },
+                    modifier = Modifier.tvControlFocus(cornerRadius = 20.dp),
+                ) {
                     Text(stringResource(R.string.common_confirm))
                 }
             },
@@ -529,7 +542,10 @@ fun SettingsPage(
             title = { Text(stringResource(R.string.settings_check_update)) },
             text = { Text(stringResource(R.string.update_download_failed)) },
             confirmButton = {
-                TextButton(onClick = { updateStage = UpdateStage.Idle }) {
+                TextButton(
+                    onClick = { updateStage = UpdateStage.Idle },
+                    modifier = Modifier.tvControlFocus(cornerRadius = 20.dp),
+                ) {
                     Text(stringResource(R.string.common_confirm))
                 }
             },
@@ -664,7 +680,10 @@ fun TextEditDialog(
         },
         confirmButton = {
             val dismissThen = LocalSheetDismissThen.current
-            TextButton(onClick = { dismissThen { onConfirm(text.trim()) } }) {
+            TextButton(
+                onClick = { dismissThen { onConfirm(text.trim()) } },
+                modifier = Modifier.tvControlFocus(cornerRadius = 20.dp),
+            ) {
                 Text(stringResource(R.string.common_confirm))
             }
         },

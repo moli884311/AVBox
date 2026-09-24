@@ -86,6 +86,7 @@ import com.github.tvbox.osc.ui.components.SettingsOptionRow
 import com.github.tvbox.osc.ui.components.SettingsSwitchRow
 import com.github.tvbox.osc.ui.theme.cardContainer
 import com.github.tvbox.osc.ui.tv.tvClickable
+import com.github.tvbox.osc.ui.tv.tvControlFocus
 import xyz.doikki.videoplayer.player.VideoView
 import java.util.ArrayList
 import java.util.Date
@@ -164,11 +165,15 @@ private fun LivePasswordDialog(
             TextButton(
                 enabled = password.isNotBlank(),
                 onClick = { dismissThen { onConfirm(password.trim()) } },
+                modifier = Modifier.tvControlFocus(cornerRadius = 20.dp),
             ) { Text(stringResource(R.string.common_confirm)) }
         },
         dismissButton = {
             val dismissAnimated = LocalSheetDismiss.current
-            TextButton(onClick = { dismissAnimated() }) { Text(stringResource(R.string.common_cancel)) }
+            TextButton(
+                onClick = { dismissAnimated() },
+                modifier = Modifier.tvControlFocus(cornerRadius = 20.dp),
+            ) { Text(stringResource(R.string.common_cancel)) }
         },
     )
 }
@@ -265,7 +270,9 @@ private fun PlayerArea(activity: LivePlayActivity, modifier: Modifier) {
         } else if (activity.overlayVisible) {
             IconButton(
                 onClick = { activity.applyFullscreen(false) },
-                modifier = Modifier.align(Alignment.TopStart),
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .tvControlFocus(cornerRadius = 24.dp),
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -328,7 +335,10 @@ private fun TimeshiftBar(activity: LivePlayActivity, modifier: Modifier) {
             .padding(horizontal = 12.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        IconButton(onClick = { activity.onTimeshiftTogglePlay() }) {
+        IconButton(
+            onClick = { activity.onTimeshiftTogglePlay() },
+            modifier = Modifier.tvControlFocus(cornerRadius = 24.dp),
+        ) {
             Icon(
                 imageVector = if (activity.playState == VideoView.STATE_PAUSED) Icons.Filled.PlayArrow else Icons.Filled.Pause,
                 contentDescription = stringResource(R.string.player_play_pause),
@@ -339,7 +349,9 @@ private fun TimeshiftBar(activity: LivePlayActivity, modifier: Modifier) {
             value = activity.tsPosition.toFloat().coerceIn(0f, max(activity.tsDuration, 1).toFloat()),
             onValueChange = { activity.onTimeshiftSeek(it) },
             valueRange = 0f..max(activity.tsDuration, 1).toFloat(),
-            modifier = Modifier.weight(1f),
+            modifier = Modifier
+                .weight(1f)
+                .tvControlFocus(cornerRadius = 12.dp),
         )
         Text(
             text = LiveEpgParser.durationToString(activity.tsPosition) + " / " + LiveEpgParser.durationToString(activity.tsDuration),

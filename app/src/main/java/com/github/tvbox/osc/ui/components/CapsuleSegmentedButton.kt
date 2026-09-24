@@ -38,6 +38,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.github.tvbox.osc.ui.tv.tvControlFocus
 
 enum class SegmentStyle { Connected, Track, Separated }
 
@@ -165,6 +166,7 @@ private fun <T> CapsuleToggleButton(
     val segmentModifier = modifier
         .semantics { role = Role.RadioButton }
         .scale(scale)
+        .tvControlFocus(cornerRadius = 12.dp)
 
     if (style == SegmentStyle.Track) {
         ToggleButton(

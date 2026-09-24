@@ -82,6 +82,7 @@ import com.github.tvbox.osc.ui.components.glassTopBarSurface
 import com.github.tvbox.osc.ui.theme.cardContainer
 import com.github.tvbox.osc.ui.tv.tvClickable
 import com.github.tvbox.osc.ui.tv.tvCombinedClickable
+import com.github.tvbox.osc.ui.tv.tvControlFocus
 import com.github.tvbox.osc.util.EpisodeTotals
 import com.github.tvbox.osc.util.HawkConfig
 import com.github.tvbox.osc.util.HistoryHelper
@@ -512,13 +513,19 @@ internal fun ConfirmDeleteDialog(
         text = { Text(text) },
         confirmButton = {
             val dismissThen = LocalSheetDismissThen.current
-            TextButton(onClick = { dismissThen { onConfirm(); onDismiss() } }) {
+            TextButton(
+                onClick = { dismissThen { onConfirm(); onDismiss() } },
+                modifier = Modifier.tvControlFocus(cornerRadius = 20.dp),
+            ) {
                 Text(stringResource(R.string.common_delete))
             }
         },
         dismissButton = {
             val dismissAnimated = LocalSheetDismiss.current
-            TextButton(onClick = { dismissAnimated() }) { Text(stringResource(R.string.common_cancel)) }
+            TextButton(
+                onClick = { dismissAnimated() },
+                modifier = Modifier.tvControlFocus(cornerRadius = 20.dp),
+            ) { Text(stringResource(R.string.common_cancel)) }
         },
     )
 }

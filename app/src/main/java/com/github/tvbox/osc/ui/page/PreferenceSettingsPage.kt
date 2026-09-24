@@ -36,6 +36,7 @@ import com.github.tvbox.osc.ui.components.SettingsRow
 import com.github.tvbox.osc.ui.components.SettingsSliderRow
 import com.github.tvbox.osc.ui.components.SettingsSwitchRow
 import com.github.tvbox.osc.ui.components.TopBarActionBox
+import com.github.tvbox.osc.ui.tv.tvControlFocus
 import com.github.tvbox.osc.util.AppLanguage
 import com.github.tvbox.osc.util.HawkConfig
 import com.github.tvbox.osc.util.HistoryMerge
@@ -221,18 +222,24 @@ private fun LanguageRow() {
             text = { Text(stringResource(R.string.settings_language_restart_message)) },
             dismissButton = {
                 val dismissAnimated = LocalSheetDismiss.current
-                TextButton(onClick = { dismissAnimated() }) { Text(stringResource(R.string.common_cancel)) }
+                TextButton(
+                    onClick = { dismissAnimated() },
+                    modifier = Modifier.tvControlFocus(cornerRadius = 20.dp),
+                ) { Text(stringResource(R.string.common_cancel)) }
             },
             confirmButton = {
                 // 确认走"先播退场动画再执行动作":动作(pending 清空 + 置重启中)与取消(回滚语言)收尾不同,
                 // 所以这里不能复用 onDismissRequest
                 val dismissThen = LocalSheetDismissThen.current
-                TextButton(onClick = {
-                    dismissThen {
-                        pending = null
-                        restarting = true
-                    }
-                }) { Text(stringResource(R.string.common_confirm)) }
+                TextButton(
+                    onClick = {
+                        dismissThen {
+                            pending = null
+                            restarting = true
+                        }
+                    },
+                    modifier = Modifier.tvControlFocus(cornerRadius = 20.dp),
+                ) { Text(stringResource(R.string.common_confirm)) }
             },
         )
     }

@@ -70,6 +70,7 @@ import com.github.tvbox.osc.ui.components.SkeletonBox
 import com.github.tvbox.osc.ui.components.VodCard
 import com.github.tvbox.osc.ui.components.VodCardStyle
 import com.github.tvbox.osc.ui.tv.tvClickable
+import com.github.tvbox.osc.ui.tv.tvControlFocus
 import com.kyant.capsule.ContinuousCapsule
 import kotlinx.coroutines.flow.first
 
@@ -327,7 +328,10 @@ private fun HomeGridHint(text: String, onRetry: (() -> Unit)? = null) {
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         if (onRetry != null) {
-            TextButton(onClick = onRetry) {
+            TextButton(
+                onClick = onRetry,
+                modifier = Modifier.tvControlFocus(cornerRadius = 20.dp),
+            ) {
                 Text(text = stringResource(R.string.common_retry))
             }
         }

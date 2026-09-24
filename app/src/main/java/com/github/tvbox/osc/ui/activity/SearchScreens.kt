@@ -63,6 +63,7 @@ import com.github.tvbox.osc.ui.components.PressableCard
 import com.github.tvbox.osc.ui.theme.cardContainer
 import com.github.tvbox.osc.ui.tv.tvClickable
 import com.github.tvbox.osc.ui.tv.tvCombinedClickable
+import com.github.tvbox.osc.ui.tv.tvControlFocus
 import com.github.tvbox.osc.util.SearchSettings
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -168,7 +169,9 @@ internal fun LayoutSwitchCard(
         onClick = onClick,
         shape = MaterialTheme.shapes.small,
         color = MaterialTheme.colorScheme.surfaceBright,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .tvControlFocus(cornerRadius = 12.dp),
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
@@ -310,7 +313,9 @@ internal fun SearchRailItem(
         onClick = onClick,
         shape = RoundedCornerShape(16.dp),
         color = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceBright,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .tvControlFocus(cornerRadius = 16.dp),
     ) {
         Row(
             modifier = Modifier.padding(start = 10.dp, end = 8.dp, top = 12.dp, bottom = 12.dp),

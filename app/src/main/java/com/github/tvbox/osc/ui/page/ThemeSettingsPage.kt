@@ -68,6 +68,7 @@ import com.github.tvbox.osc.ui.theme.PresetSeeds
 import com.github.tvbox.osc.ui.theme.ThemeMode
 import com.github.tvbox.osc.ui.theme.ThemeSource
 import com.github.tvbox.osc.ui.tv.tvClickable
+import com.github.tvbox.osc.ui.tv.tvControlFocus
 import com.materialkolor.PaletteStyle
 import kotlin.math.roundToInt
 
@@ -173,7 +174,10 @@ fun ThemeSettingsScreen(onNavigateBack: () -> Unit) {
                                 color = MaterialTheme.colorScheme.onSurface,
                                 modifier = Modifier.weight(1f),
                             )
-                            TextButton(onClick = { LiquidGlassState.restoreDefaults() }) {
+                            TextButton(
+                                onClick = { LiquidGlassState.restoreDefaults() },
+                                modifier = Modifier.tvControlFocus(cornerRadius = 20.dp),
+                            ) {
                                 Text(stringResource(R.string.theme_reset))
                             }
                         }
@@ -295,7 +299,11 @@ private fun CustomThemeSwitchRow(checked: Boolean, onCheckedChange: (Boolean) ->
             modifier = Modifier.weight(1f),
         )
         Spacer(Modifier.width(16.dp))
-        Switch(checked = checked, onCheckedChange = onCheckedChange)
+        Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            modifier = Modifier.tvControlFocus(cornerRadius = 18.dp),
+        )
     }
 }
 
@@ -348,6 +356,7 @@ private fun GlassSliderRow(
                 disabledActiveTrackColor = MaterialTheme.colorScheme.outline,
                 disabledInactiveTrackColor = MaterialTheme.colorScheme.surfaceVariant,
             ),
+            modifier = Modifier.tvControlFocus(cornerRadius = 12.dp),
         )
     }
 }
@@ -438,6 +447,7 @@ private fun VariantSelectorRow(
                     onClick = { onStyleSelected(style) },
                     enabled = enabled,
                     label = { Text(stringResource(labelRes)) },
+                    modifier = Modifier.tvControlFocus(cornerRadius = 10.dp),
                 )
             }
         }

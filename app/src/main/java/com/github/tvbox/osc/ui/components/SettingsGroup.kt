@@ -38,6 +38,7 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.github.tvbox.osc.ui.theme.cardContainer
+import com.github.tvbox.osc.ui.tv.tvControlFocus
 import com.github.tvbox.osc.ui.tv.tvFocusableCard
 
 enum class SettingsCardPosition {
@@ -215,7 +216,8 @@ fun SettingsSliderRow(
             steps = steps,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 8.dp),
+                .padding(horizontal = 8.dp)
+                .tvControlFocus(cornerRadius = 12.dp),
         )
     }
 }

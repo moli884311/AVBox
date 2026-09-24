@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import com.github.tvbox.osc.ui.tv.tvControlFocus
 
 sealed interface LoadState {
     data object Loading : LoadState
@@ -64,7 +65,10 @@ fun LoadStateBox(
             ) {
                 StateText(state.message ?: errorText)
                 if (onRetry != null) {
-                    FilledTonalButton(onClick = onRetry) {
+                    FilledTonalButton(
+                        onClick = onRetry,
+                        modifier = Modifier.tvControlFocus(cornerRadius = 20.dp),
+                    ) {
                         Text(text = retryText)
                     }
                 }

@@ -87,6 +87,7 @@ import com.github.tvbox.osc.ui.navbar.NavMetrics
 import com.github.tvbox.osc.ui.theme.LiquidGlassState
 import com.github.tvbox.osc.ui.tv.TV_OVERSCAN_DP
 import com.github.tvbox.osc.ui.tv.rememberIsTelevision
+import com.github.tvbox.osc.ui.tv.tvControlFocus
 import com.github.tvbox.osc.ui.tv.tvInitialFocus
 import com.github.tvbox.osc.util.AppManager
 import com.github.tvbox.osc.util.BootGuard
@@ -126,13 +127,19 @@ private fun BootErrorDialog(msg: String) {
         text = { Text(msg) },
         confirmButton = {
             val dismissThen = LocalSheetDismissThen.current
-            TextButton(onClick = { dismissThen { AppBootstrap.retry() } }) {
+            TextButton(
+                onClick = { dismissThen { AppBootstrap.retry() } },
+                modifier = Modifier.tvControlFocus(cornerRadius = 20.dp),
+            ) {
                 Text(stringResource(R.string.common_retry))
             }
         },
         dismissButton = {
             val dismissThen = LocalSheetDismissThen.current
-            TextButton(onClick = { dismissThen { AppBootstrap.continueOffline() } }) {
+            TextButton(
+                onClick = { dismissThen { AppBootstrap.continueOffline() } },
+                modifier = Modifier.tvControlFocus(cornerRadius = 20.dp),
+            ) {
                 Text(stringResource(R.string.common_cancel))
             }
         },

@@ -22,6 +22,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.github.tvbox.osc.R
 import com.github.tvbox.osc.bean.MovieSort
+import com.github.tvbox.osc.ui.tv.tvControlFocus
 
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -62,6 +63,7 @@ fun FilterSheet(
                             },
                             label = { Text(valueName) },
                             shape = RoundedCornerShape(18.dp),
+                            modifier = Modifier.tvControlFocus(cornerRadius = 18.dp),
                         )
                     }
                 }
@@ -72,21 +74,27 @@ fun FilterSheet(
                     .padding(vertical = 12.dp),
                 horizontalArrangement = Arrangement.End,
             ) {
-                TextButton(onClick = {
-                    if (!accepted) {
-                        accepted = true
-                        selection = emptyMap()
-                        onConfirm(emptyMap())
-                        dismissAnimated()
-                    }
-                }) { Text(stringResource(R.string.filter_clear)) }
-                TextButton(onClick = {
-                    if (!accepted) {
-                        accepted = true
-                        onConfirm(selection)
-                        dismissAnimated()
-                    }
-                }) { Text(stringResource(R.string.common_confirm)) }
+                TextButton(
+                    onClick = {
+                        if (!accepted) {
+                            accepted = true
+                            selection = emptyMap()
+                            onConfirm(emptyMap())
+                            dismissAnimated()
+                        }
+                    },
+                    modifier = Modifier.tvControlFocus(cornerRadius = 20.dp),
+                ) { Text(stringResource(R.string.filter_clear)) }
+                TextButton(
+                    onClick = {
+                        if (!accepted) {
+                            accepted = true
+                            onConfirm(selection)
+                            dismissAnimated()
+                        }
+                    },
+                    modifier = Modifier.tvControlFocus(cornerRadius = 20.dp),
+                ) { Text(stringResource(R.string.common_confirm)) }
             }
         }
     }

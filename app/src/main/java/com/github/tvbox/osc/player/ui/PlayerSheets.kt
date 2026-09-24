@@ -45,6 +45,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
@@ -165,6 +166,8 @@ internal fun PlayerDialog(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
+                    // 遮罩只收触摸,禁止参与 TV 焦点,否则铺满全屏的 clickable 会截胡方向键
+                    .focusProperties { canFocus = false }
                     .clickable(
                         enabled = !closing,
                         interactionSource = remember { MutableInteractionSource() },
@@ -183,6 +186,7 @@ internal fun PlayerDialog(
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
+                        .focusProperties { canFocus = false }
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null,

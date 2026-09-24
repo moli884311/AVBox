@@ -33,6 +33,7 @@ import com.github.tvbox.osc.bean.DanmuSearchResult
 import com.github.tvbox.osc.event.RefreshEvent
 import com.github.tvbox.osc.player.state.DanmuSearchSheetState
 import com.github.tvbox.osc.player.state.DanmuSettingSheetState
+import com.github.tvbox.osc.ui.tv.tvControlFocus
 import com.github.tvbox.osc.util.DanmuHelper
 import org.greenrobot.eventbus.EventBus
 
@@ -184,7 +185,11 @@ fun DanmuSettingSheet(sheet: DanmuSettingSheetState, onDismiss: () -> Unit) {
 private fun SheetSwitchRow(label: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
     SheetLabelRow(label) {
         Spacer(Modifier.weight(1f))
-        Switch(checked = checked, onCheckedChange = onCheckedChange)
+        Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            modifier = Modifier.tvControlFocus(cornerRadius = playerDim(R.dimen.vs_24)),
+        )
     }
 }
 

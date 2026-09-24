@@ -85,6 +85,7 @@ import com.github.tvbox.osc.ui.components.VodCard
 import com.github.tvbox.osc.ui.components.VodCardMenu
 import com.github.tvbox.osc.ui.components.rememberVodCardMenuState
 import com.github.tvbox.osc.ui.tv.tvClickable
+import com.github.tvbox.osc.ui.tv.tvControlFocus
 import com.github.tvbox.osc.ui.page.openVodCardOrDetail
 import com.github.tvbox.osc.ui.player.PlayerTipBridge
 import kotlinx.coroutines.delay
@@ -282,7 +283,10 @@ private fun DetailContent(
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.weight(1f),
                     )
-                    IconButton(onClick = { activity.openMusicPlayer() }) {
+                    IconButton(
+                        onClick = { activity.openMusicPlayer() },
+                        modifier = Modifier.tvControlFocus(cornerRadius = 22.dp),
+                    ) {
                         Icon(
                             painter = painterResource(R.drawable.ic_detail_music_player),
                             contentDescription = stringResource(R.string.detail_music_player),
@@ -290,7 +294,10 @@ private fun DetailContent(
                             modifier = Modifier.size(24.dp),
                         )
                     }
-                    IconButton(onClick = { activity.playContainer?.showCast() }) {
+                    IconButton(
+                        onClick = { activity.playContainer?.showCast() },
+                        modifier = Modifier.tvControlFocus(cornerRadius = 22.dp),
+                    ) {
                         Icon(
                             painter = painterResource(R.drawable.ic_detail_cast),
                             contentDescription = stringResource(R.string.common_cast),
@@ -298,7 +305,10 @@ private fun DetailContent(
                             modifier = Modifier.size(24.dp),
                         )
                     }
-                    IconButton(onClick = { vm.toggleCollect() }) {
+                    IconButton(
+                        onClick = { vm.toggleCollect() },
+                        modifier = Modifier.tvControlFocus(cornerRadius = 22.dp),
+                    ) {
                         AnimatedContent(
                             targetState = collected,
                             transitionSpec = {
@@ -408,6 +418,7 @@ private fun DetailContent(
                 ChipRow(title = stringResource(R.string.detail_quality)) {
                     itemsIndexed(qualityOptions) { index, option ->
                         FilterChip(
+                            modifier = Modifier.tvControlFocus(cornerRadius = 20.dp),
                             selected = index == qualitySelected,
                             onClick = { vm.onQualityClick(index) },
                             label = { Text(option) },
@@ -423,6 +434,7 @@ private fun DetailContent(
                 ChipRow(title = stringResource(R.string.detail_line)) {
                     itemsIndexed(flags, key = { i, f -> "${i}_${f.name}" }) { _, flag ->
                         FilterChip(
+                            modifier = Modifier.tvControlFocus(cornerRadius = 20.dp),
                             selected = flag.name == currentFlag,
                             onClick = { vm.onFlagClick(flag.name ?: "") },
                             label = { Text(flag.name ?: "") },
@@ -511,6 +523,7 @@ private fun EpisodeRow(
         ) {
             itemsIndexed(episodes) { index, ep ->
                 FilterChip(
+                    modifier = Modifier.tvControlFocus(cornerRadius = 20.dp),
                     selected = index == playIndex,
                     onClick = { vm.onEpisodeClick(index) },
                     label = {
@@ -600,6 +613,7 @@ private fun SourceSection(vm: DetailViewModel, currentSourceName: String?, revis
             if (currentSourceName != null) {
                 item(key = "current") {
                     FilterChip(
+                        modifier = Modifier.tvControlFocus(cornerRadius = 20.dp),
                         selected = true,
                         onClick = {},
                         label = { Text(currentSourceName) },
@@ -609,6 +623,7 @@ private fun SourceSection(vm: DetailViewModel, currentSourceName: String?, revis
             }
             itemsIndexed(sourceChips, key = { _, c -> c.key }) { _, chip ->
                 FilterChip(
+                    modifier = Modifier.tvControlFocus(cornerRadius = 20.dp),
                     selected = false,
                     onClick = { vm.candidateForKey(chip.key)?.let { vm.switchSource(it) } },
                     label = { Text(chip.name) },
@@ -748,6 +763,7 @@ private fun EpisodeSheet(vm: DetailViewModel, revision: Int) {
                 ) {
                     itemsIndexed(flags, key = { i, f -> "${i}_${f.name}" }) { _, flag ->
                         FilterChip(
+                            modifier = Modifier.tvControlFocus(cornerRadius = 20.dp),
                             selected = flag.name == currentFlag,
                             onClick = { vm.onFlagClick(flag.name ?: "") },
                             label = { Text(flag.name ?: "") },
@@ -764,6 +780,7 @@ private fun EpisodeSheet(vm: DetailViewModel, revision: Int) {
                 ) {
                     itemsIndexed(groups) { index, label ->
                         FilterChip(
+                            modifier = Modifier.tvControlFocus(cornerRadius = 20.dp),
                             selected = index == selectedGroup,
                             onClick = {
                                 selectedGroup = index
@@ -810,7 +827,8 @@ private fun EpisodeSheet(vm: DetailViewModel, revision: Int) {
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(40.dp),
+                            .height(40.dp)
+                            .tvControlFocus(cornerRadius = 20.dp),
                         label = {
                             Text(
                                 text = ep.name ?: (index + 1).toString(),

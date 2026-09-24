@@ -81,6 +81,7 @@ import com.github.tvbox.osc.ui.components.glassSurface
 import com.github.tvbox.osc.ui.theme.cardContainer
 import com.github.tvbox.osc.ui.tv.tvClickable
 import com.github.tvbox.osc.ui.tv.tvCombinedClickable
+import com.github.tvbox.osc.ui.tv.tvControlFocus
 import com.github.tvbox.osc.util.ApiLineSignal
 import com.github.tvbox.osc.util.BootGuard
 import com.github.tvbox.osc.util.HawkConfig
@@ -678,13 +679,19 @@ fun ConfigManageScreen(onNavigateBack: () -> Unit) {
             },
             confirmButton = {
                 val dismissThen = LocalSheetDismissThen.current
-                TextButton(onClick = { dismissThen { enableAndSwitch() } }) {
+                TextButton(
+                    onClick = { dismissThen { enableAndSwitch() } },
+                    modifier = Modifier.tvControlFocus(cornerRadius = 20.dp),
+                ) {
                     Text(stringResource(R.string.dialog_source_disabled_confirm))
                 }
             },
             dismissButton = {
                 val dismissAnimated = LocalSheetDismiss.current
-                TextButton(onClick = { dismissAnimated() }) { Text(stringResource(R.string.common_cancel)) }
+                TextButton(
+                    onClick = { dismissAnimated() },
+                    modifier = Modifier.tvControlFocus(cornerRadius = 20.dp),
+                ) { Text(stringResource(R.string.common_cancel)) }
             },
         )
     }
@@ -868,9 +875,17 @@ private fun SubscribeCard(
                 label = "configRowControl",
             ) { managing ->
                 if (managing) {
-                    Checkbox(checked = selected, onCheckedChange = { onClick() })
+                    Checkbox(
+                        checked = selected,
+                        onCheckedChange = { onClick() },
+                        modifier = Modifier.tvControlFocus(cornerRadius = 6.dp),
+                    )
                 } else {
-                    Switch(checked = active, onCheckedChange = onCheckedChange)
+                    Switch(
+                        checked = active,
+                        onCheckedChange = onCheckedChange,
+                        modifier = Modifier.tvControlFocus(cornerRadius = 18.dp),
+                    )
                 }
             }
         }
@@ -971,6 +986,7 @@ private fun AddSubscribeDialog(
             TextButton(
                 onClick = { dismissThen { onSave(name.trim(), url.trim()) } },
                 enabled = url.isNotBlank(),
+                modifier = Modifier.tvControlFocus(cornerRadius = 20.dp),
             ) { Text(stringResource(R.string.common_save)) }
         },
     )

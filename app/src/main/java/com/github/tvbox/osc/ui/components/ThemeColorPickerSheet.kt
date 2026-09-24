@@ -36,6 +36,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.github.tvbox.osc.R
+import com.github.tvbox.osc.ui.tv.tvControlFocus
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.sin
@@ -76,7 +77,9 @@ fun ThemeColorPickerSheet(
                 value = hsv[2],
                 onValueChange = { v -> hsv = floatArrayOf(hsv[0], hsv[1], v) },
                 valueRange = 0f..1f,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .tvControlFocus(cornerRadius = 12.dp),
             )
             Spacer(Modifier.height(12.dp))
 
@@ -87,20 +90,26 @@ fun ThemeColorPickerSheet(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End,
             ) {
-                TextButton(onClick = {
-                    if (!accepted) {
-                        accepted = true
-                        dismissAnimated()
-                    }
-                }) { Text(stringResource(R.string.common_cancel)) }
+                TextButton(
+                    onClick = {
+                        if (!accepted) {
+                            accepted = true
+                            dismissAnimated()
+                        }
+                    },
+                    modifier = Modifier.tvControlFocus(cornerRadius = 20.dp),
+                ) { Text(stringResource(R.string.common_cancel)) }
                 Spacer(Modifier.width(8.dp))
-                Button(onClick = {
-                    if (!accepted) {
-                        accepted = true
-                        onConfirm(currentColor)
-                        dismissAnimated()
-                    }
-                }) { Text(stringResource(R.string.common_confirm)) }
+                Button(
+                    onClick = {
+                        if (!accepted) {
+                            accepted = true
+                            onConfirm(currentColor)
+                            dismissAnimated()
+                        }
+                    },
+                    modifier = Modifier.tvControlFocus(cornerRadius = 20.dp),
+                ) { Text(stringResource(R.string.common_confirm)) }
             }
         }
     }

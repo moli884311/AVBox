@@ -87,6 +87,7 @@ import com.github.tvbox.osc.ui.components.SettingsIconBadge
 import com.github.tvbox.osc.ui.theme.AVBoxTheme
 import com.github.tvbox.osc.ui.theme.cardContainer
 import com.github.tvbox.osc.ui.tv.tvClickable
+import com.github.tvbox.osc.ui.tv.tvControlFocus
 import com.github.tvbox.osc.ui.activity.PartitionListActivity
 import com.github.tvbox.osc.ui.page.ManageActionIcon
 import com.github.tvbox.osc.ui.page.openVodCardOrDetail
@@ -848,6 +849,7 @@ private fun SearchListResults(
                         ) {
                             item(key = "filter_all") {
                                 FilterChip(
+                                    modifier = Modifier.tvControlFocus(cornerRadius = 20.dp),
                                     selected = selectedSource == null,
                                     onClick = { onSelectSource(null) },
                                     label = { Text(stringResource(R.string.common_all)) },
@@ -856,6 +858,7 @@ private fun SearchListResults(
                             }
                             items(done, key = { "filter_${it.sourceKey}" }) { result ->
                                 FilterChip(
+                                    modifier = Modifier.tvControlFocus(cornerRadius = 20.dp),
                                     selected = selectedSource == result.sourceKey,
                                     onClick = {
                                         onSelectSource(

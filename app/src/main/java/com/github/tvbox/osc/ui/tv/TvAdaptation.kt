@@ -15,12 +15,15 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -105,6 +108,27 @@ fun Modifier.tvFocusBorder(
             style = Stroke(width = stroke),
         )
     }
+}
+
+/**
+ * 给任意可聚焦控件(M3 Button/TextButton/IconButton/Switch/Checkbox/Slider/FilterChip/
+ * Surface(onClick) 等)叠加 TV 聚焦描边。
+ *
+ * 与 [tvFocusableCard] 的区别:不要求调用方提供 `InteractionSource` —— 这里直接用
+ * [onFocusChanged] 感知焦点,因此 M3 组件的内部实现完全不用改,只要把本 Modifier 传进去。
+ * 手机上原样返回;描边要生效,本 Modifier 必须排在组件内部 focusable 之前(传 `modifier` 即满足)。
+ */
+@Composable
+fun Modifier.tvControlFocus(
+    cornerRadius: Dp = 16.dp,
+    borderColor: Color = MaterialTheme.colorScheme.primary,
+): Modifier {
+    val isTelevision = LocalIsTelevision.current
+    var focused by remember { mutableStateOf(false) }
+    if (!isTelevision) return this
+    return this
+        .onFocusChanged { focused = it.isFocused }
+        .tvFocusBorder(focused = focused, cornerRadius = cornerRadius, color = borderColor)
 }
 
 /**

@@ -36,6 +36,7 @@ import com.github.tvbox.osc.R
 import com.github.tvbox.osc.api.ApiConfig
 import com.github.tvbox.osc.bean.SourceBean
 import com.github.tvbox.osc.ui.activity.SearchViewModel
+import com.github.tvbox.osc.ui.tv.tvControlFocus
 import com.github.tvbox.osc.util.HomeSettings
 import com.github.tvbox.osc.util.SearchSettings
 
@@ -146,8 +147,14 @@ fun SearchSettingsSheet(onDismiss: () -> Unit) {
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                TextButton(onClick = { applySelection(allKeys) }) { Text(stringResource(R.string.common_select_all)) }
-                TextButton(onClick = { applySelection(allKeys - selected) }) { Text(stringResource(R.string.common_invert_selection)) }
+                TextButton(
+                    onClick = { applySelection(allKeys) },
+                    modifier = Modifier.tvControlFocus(cornerRadius = 20.dp),
+                ) { Text(stringResource(R.string.common_select_all)) }
+                TextButton(
+                    onClick = { applySelection(allKeys - selected) },
+                    modifier = Modifier.tvControlFocus(cornerRadius = 20.dp),
+                ) { Text(stringResource(R.string.common_invert_selection)) }
             }
             if (sources.isEmpty()) {
                 Text(
@@ -217,7 +224,7 @@ private fun SourceCard(
         onClick = onClick,
         shape = shape,
         color = MaterialTheme.colorScheme.surfaceBright,
-        modifier = modifier,
+        modifier = modifier.tvControlFocus(cornerRadius = 14.dp),
     ) {
         Box(
             modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
