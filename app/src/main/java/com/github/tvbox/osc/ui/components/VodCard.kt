@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -33,6 +34,7 @@ fun VodCard(
     onLongClick: () -> Unit,
     modifier: Modifier = Modifier,
     style: VodCardStyle = VodCardStyle.Overlay,
+    focusRequester: FocusRequester? = null,
 ) {
     if (style == VodCardStyle.Stacked) {
         Column(modifier = modifier) {
@@ -40,6 +42,7 @@ fun VodCard(
                 onClick = onClick,
                 onLongClick = onLongClick,
                 shape = RoundedCornerShape(16.dp),
+                focusRequester = focusRequester,
             ) {
                 Box(modifier = Modifier.aspectRatio(2f / 3f)) {
                     VodPoster(video)
@@ -66,6 +69,7 @@ fun VodCard(
         onLongClick = onLongClick,
         modifier = modifier,
         shape = RoundedCornerShape(16.dp),
+        focusRequester = focusRequester,
     ) {
         Box(modifier = Modifier.aspectRatio(2f / 3f)) {
             VodPoster(video)

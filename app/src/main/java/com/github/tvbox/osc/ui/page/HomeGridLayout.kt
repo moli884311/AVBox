@@ -48,9 +48,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -69,9 +71,11 @@ import com.github.tvbox.osc.ui.components.FilterSheet
 import com.github.tvbox.osc.ui.components.SkeletonBox
 import com.github.tvbox.osc.ui.components.VodCard
 import com.github.tvbox.osc.ui.components.VodCardStyle
+import com.github.tvbox.osc.ui.tv.LocalIsTelevision
 import com.github.tvbox.osc.ui.tv.tvClickable
 import com.github.tvbox.osc.ui.tv.tvControlFocus
 import com.kyant.capsule.ContinuousCapsule
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 
 internal val HomeGridTabRowHeight = 52.dp
@@ -92,6 +96,11 @@ private val HomeFilterChipEqualWidthMaxWidth = 600.dp
 private val HomeGridItemSpacing = 16.dp
 
 private val HomeGridContentTopPadding = 4.dp
+
+/** TV 首卡聚焦：最多重试次数与间隔(约 6s),覆盖首帧骨架期 requester 尚未 attach 的情况 */
+private const val TvFirstCardFocusMaxAttempts = 50
+
+private const val TvFirstCardFocusRetryDelayMs = 120L
 
 /** 末尾"加载更多"哨兵压在视口外时不会组合 ⇒ 首屏末行右侧会空一格,离末尾不足一行就先取下一页 */
 internal fun shouldPrefetchNextPage(
@@ -120,6 +129,9 @@ fun HomeGridLayout(
     var selectedSortId by remember { mutableStateOf("") }
     var filterOpen by remember { mutableStateOf(false) }
     val gridStates = remember(sourceKey?.key) { mutableMapOf<String, LazyGridState>() }
+    // TV 首卡聚焦:进入栅格时把焦点显式落到第一张卡上(见下方 LaunchedEffect)
+    val firstCardRequester = remember { FocusRequester() }
+    var firstCardFocusDone by remember { mutableStateOf(false) }
 
     LaunchedEffect(sorts) {
         val kept = selectedSortId.isNotEmpty() && sorts.any { it.id == selectedSortId }
@@ -137,6 +149,25 @@ fun HomeGridLayout(
     val sort = partition?.sort ?: sorts.firstOrNull { it.id == selectedSortId }
     // 分类 tab 行不在滚动容器里,拿不到栅格的内容内边距,得单独让开侧边导航
     val navStart = contentPadding.calculateStartPadding(LocalLayoutDirection.current)
+
+    // TV:栅格数据就绪后显式把焦点落到第一张卡上。
+    // 不这么做时初始焦点会停在分类 tab 行(M3 Tab 自带 focusable),遥控方向键从 tab 行
+    // 进不去栅格 —— 用户实测"整个首页的影片卡片都没法用遥控器操控"。
+    // 整个布局只在进入时自动聚焦一次:切分类时不抢焦点,否则用户沿 tab 行左右移动会被拽进栅格。
+    val isTelevision = LocalIsTelevision.current
+    LaunchedEffect(isTelevision, partition?.state, firstCardFocusDone) {
+        if (!isTelevision || firstCardFocusDone) return@LaunchedEffect
+        if (partition?.state != HomeViewModel.PartitionState.Ready) return@LaunchedEffect
+        repeat(TvFirstCardFocusMaxAttempts) {
+            if (firstCardFocusDone) return@LaunchedEffect
+            withFrameNanos { }
+            if (runCatching { firstCardRequester.requestFocus() }.getOrDefault(false)) {
+                firstCardFocusDone = true
+                return@LaunchedEffect
+            }
+            delay(TvFirstCardFocusRetryDelayMs)
+        }
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -237,12 +268,13 @@ fun HomeGridLayout(
                         itemsIndexed(
                             videos,
                             key = { index, video -> "${index}_${video.id}_${video.name}" },
-                        ) { _, video ->
+                        ) { index, video ->
                             VodCard(
                                 video = video,
                                 onClick = { onCardClick(video) },
                                 onLongClick = { onCardLongClick(video) },
                                 style = VodCardStyle.Stacked,
+                                focusRequester = if (index == 0 && tabId == selectedSortId) firstCardRequester else null,
                             )
                         }
                         // 首屏没排满时"加载更多"哨兵还压在视口外 ⇒ 它不组合、永远不触发,末行右侧会空一格
@@ -384,6 +416,8 @@ private fun HomeSortTabRow(
                 Tab(
                     selected = item.id == selectedId,
                     onClick = { onSelect(item.id) },
+                    // TV:分类 tab 必须能被遥控聚焦并显示描边,否则栅格布局下用户进不去别的分类
+                    modifier = Modifier.tvControlFocus(cornerRadius = 12.dp),
                     text = {
                         Text(
                             text = item.name ?: "",

@@ -212,18 +212,28 @@ fun Modifier.tvInitialFocus(
     focusRequester: FocusRequester,
     enabled: Boolean = LocalIsTelevision.current,
 ): Modifier {
+    // 组内已有焦点(hasFocus = 自身或后代)立即停止重试:
+    // 否则数据加载完成的那一刻会把焦点从用户已经移到的位置抢回第一个可聚焦项。
+    var hasFocusInGroup by remember { mutableStateOf(false) }
     LaunchedEffect(enabled, focusRequester) {
         if (!enabled) return@LaunchedEffect
         repeat(InitialFocusMaxAttempts) {
+            if (hasFocusInGroup) return@LaunchedEffect
             withFrameNanos { }
             if (runCatching { focusRequester.requestFocus() }.getOrDefault(false)) return@LaunchedEffect
             delay(InitialFocusRetryDelayMs)
         }
     }
-    return this
+    return this.onFocusChanged { hasFocusInGroup = it.hasFocus }
 }
 
-/** 初始焦点最多重试帧数(约 1s):足以覆盖首页首屏加载骨架切换为真实卡片的时间。 */
-private const val InitialFocusMaxAttempts = 20
+/**
+ * 初始焦点最多重试次数 × 间隔 = 约 12s。
+ *
+ * ⚠️ 曾设成 20×50ms(≈1s):首页/收藏等页面首帧是加载骨架(没有任何可聚焦项),
+ * 源慢一点(>1s)重试就用完放弃,此后整页再无焦点 —— 遥控按任何方向键都没反应
+ * (表现为"首页卡片完全没法用遥控器操作")。现在拉长到足够覆盖数据加载。
+ */
+private const val InitialFocusMaxAttempts = 100
 
-private const val InitialFocusRetryDelayMs = 50L
+private const val InitialFocusRetryDelayMs = 120L

@@ -45,7 +45,7 @@ private val HeroMaxSidePad = 96.dp
 private val HeroMaxWidth = 640.dp
 
 /** Hero 高度上限:与宽度上限共同约束,宽屏下高度约 340dp(未封顶时实测 544dp,占屏高 72%) */
-internal val HeroMaxHeight = 340.dp
+private val HeroMaxHeight = 340.dp
 
 @Composable
 fun HeroCarousel(

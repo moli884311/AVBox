@@ -25,7 +25,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -82,8 +81,6 @@ import com.github.tvbox.osc.ui.activity.ConfigManageActivity
 import com.github.tvbox.osc.ui.activity.PartitionListActivity
 import com.github.tvbox.osc.ui.activity.SearchActivity
 import com.github.tvbox.osc.ui.components.AVBoxBottomSheet
-import com.github.tvbox.osc.ui.components.HeroCarousel
-import com.github.tvbox.osc.ui.components.HeroMaxHeight
 import com.github.tvbox.osc.ui.components.LoadState
 import com.github.tvbox.osc.ui.components.AppTopBarScaffold
 import com.github.tvbox.osc.ui.components.LoadStateBox
@@ -301,57 +298,16 @@ fun HomePage(vm: HomeViewModel, contentPadding: PaddingValues = PaddingValues(0.
                     bottom = 88.dp + navBottom,
                 ),
             ) {
-                item(key = "hero") {
-                    if (rec.state == HomeViewModel.PartitionState.Ready && rec.videos.isNotEmpty()) {
-                        HeroCarousel(
-                            videos = rec.videos.take(5),
-                            onCardClick = { video -> handleCardClick(vm, video, context) },
-                        )
-                    } else if (rec.state == HomeViewModel.PartitionState.Loading) {
-                        SkeletonBox(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .wrapContentWidth(Alignment.CenterHorizontally)
-                                .heightIn(max = HeroMaxHeight)
-                                .aspectRatio(1.5f)
-                                .clip(RoundedCornerShape(24.dp)),
-                            shape = RoundedCornerShape(24.dp),
-                        )
-                    } else if (rec.state == HomeViewModel.PartitionState.Error) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .wrapContentWidth(Alignment.CenterHorizontally)
-                                .heightIn(max = HeroMaxHeight)
-                                .aspectRatio(1.5f)
-                                .clip(RoundedCornerShape(24.dp))
-                                .background(MaterialTheme.colorScheme.surfaceBright),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            LoadStateBox(
-                                state = LoadState.Error(),
-                                emptyText = "",
-                                errorText = stringResource(R.string.home_load_timeout),
-                                                retryText = stringResource(R.string.common_retry),
-                                onRetry = { vm.loadHome() },
-                            )
-                        }
-                    }
-                }
-                if (rec.state != HomeViewModel.PartitionState.Empty &&
-                    (rec.state == HomeViewModel.PartitionState.Loading || rec.videos.size > 5)
-                ) {
-                    item(key = "rec") {
-                        PartitionSection(
-                            title = stringResource(R.string.home_recommend),
-                            state = rec.state,
-                            videos = rec.videos.drop(5),
-                            onLoadMore = {},
-                            onCardClick = { video -> handleCardClick(vm, video, context) },
-                            onCardLongClick = { video -> vodMenu.show(video) },
-                            cardWidth = 140.dp,
-                        )
-                    }
+                item(key = "rec") {
+                    PartitionSection(
+                        title = stringResource(R.string.home_recommend),
+                        state = rec.state,
+                        videos = rec.videos,
+                        onLoadMore = {},
+                        onCardClick = { video -> handleCardClick(vm, video, context) },
+                        onCardLongClick = { video -> vodMenu.show(video) },
+                        cardWidth = 140.dp,
+                    )
                 }
                 items(partitions, key = { it.sort.id }) { p ->
                     PartitionSection(
