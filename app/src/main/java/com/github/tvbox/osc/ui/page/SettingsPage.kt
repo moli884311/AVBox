@@ -56,6 +56,7 @@ import com.github.tvbox.osc.R
 import com.github.tvbox.osc.ui.components.AVBoxAlertDialog
 import com.github.tvbox.osc.ui.components.AppTopBarScaffold
 import com.github.tvbox.osc.ui.components.AVBoxBottomSheet
+import com.github.tvbox.osc.ui.components.LocalSheetDismiss
 import com.github.tvbox.osc.ui.components.LocalSheetDismissThen
 import com.github.tvbox.osc.ui.components.SettingsCard
 import com.github.tvbox.osc.ui.components.SettingsCardPosition
@@ -611,6 +612,7 @@ private fun AppInfoHeaderCard(versionName: String) {
 @Composable
 private fun AboutSheet(versionName: String, onDismiss: () -> Unit) {
     AVBoxBottomSheet(onDismissRequest = onDismiss, title = stringResource(R.string.settings_about)) {
+        val dismissAnimated = LocalSheetDismiss.current
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -630,6 +632,21 @@ private fun AboutSheet(versionName: String, onDismiss: () -> Unit) {
                 color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.padding(top = 8.dp),
             )
+            // 关于弹层原本只有纯文字、没有任何可聚焦控件:TV 上弹层打开后焦点无处可去,
+            // 方向键仍在底层页面乱跑。补一个关闭按钮,既给遥控器一个落点,也方便触摸关闭。
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 16.dp),
+                horizontalArrangement = Arrangement.End,
+            ) {
+                TextButton(
+                    onClick = { dismissAnimated() },
+                    modifier = Modifier.tvControlFocus(cornerRadius = 20.dp),
+                ) {
+                    Text(stringResource(R.string.common_confirm))
+                }
+            }
         }
     }
 }

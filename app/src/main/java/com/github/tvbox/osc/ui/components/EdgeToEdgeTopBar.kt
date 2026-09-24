@@ -4,6 +4,7 @@ import android.os.Build
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -35,6 +36,8 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
@@ -46,7 +49,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.github.tvbox.osc.ui.theme.LiquidGlassState
+import com.github.tvbox.osc.ui.tv.LocalIsTelevision
 import com.github.tvbox.osc.ui.tv.tvFocusableCard
+import com.github.tvbox.osc.ui.tv.tvInitialFocus
 import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 
@@ -60,6 +65,7 @@ fun AppTopBarScaffold(
     actions: @Composable RowScope.() -> Unit = {},
     collapseEnabled: Boolean = true,
     topBarStartInset: Dp = 0.dp,
+    initialFocusOnTv: Boolean = true,
     content: @Composable androidx.compose.foundation.layout.BoxScope.(topPadding: androidx.compose.ui.unit.Dp, bottomPadding: androidx.compose.ui.unit.Dp) -> Unit,
 ) {
     val scrollBehavior = if (collapseEnabled) {
@@ -67,6 +73,10 @@ fun AppTopBarScaffold(
     } else {
         TopAppBarDefaults.pinnedScrollBehavior()
     }
+    // TV 初始焦点:独立 Activity/页面(设置子页、搜索、分区等)没有导航栏可借力,
+    // 必须显式把焦点落到内容区第一个可聚焦项,否则遥控方向键在空焦点状态下表现飘忽。
+    val isTelevision = LocalIsTelevision.current
+    val pageInitialFocusRequester = remember { FocusRequester() }
     val glassConfig = LiquidGlassState.config
     val glassEnabled = glassConfig.controlsEnabled &&
         Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
@@ -117,6 +127,12 @@ fun AppTopBarScaffold(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
+                    .focusRequester(pageInitialFocusRequester)
+                    .focusGroup()
+                    .tvInitialFocus(
+                        pageInitialFocusRequester,
+                        enabled = initialFocusOnTv && isTelevision,
+                    )
                     .then(
                         if (glassEnabled) {
                             Modifier.layerBackdrop(glassBackdrop, glassBounds)

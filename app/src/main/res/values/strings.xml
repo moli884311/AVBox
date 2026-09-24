@@ -387,6 +387,13 @@
     <string name="config_live_source_hint">支持配置 JSON / m3u / txt 直播源</string>
     <string name="config_source_disabled_tag">已禁用</string>
     <string name="config_pick_local">从本地选择</string>
+    <string name="config_paste_clipboard">粘贴剪贴板</string>
+    <string name="config_paste_empty">剪贴板没有可粘贴的内容</string>
+    <string name="config_scan_qr">扫码输入</string>
+    <string name="config_qr_hint">用手机扫描二维码，在打开的页面里输入地址后点「发送到电视」</string>
+    <string name="config_qr_waiting">等待手机发送…</string>
+    <string name="config_qr_back">手动输入</string>
+    <string name="config_qr_failed">二维码服务启动失败，请确认电视与手机连在同一局域网</string>
     <string name="config_field_name">名字</string>
     <string name="config_field_url">链接</string>
     <string name="live_follow_vod_source">跟随点播源</string>

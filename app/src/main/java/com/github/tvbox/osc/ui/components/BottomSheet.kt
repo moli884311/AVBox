@@ -359,7 +359,9 @@ private fun SheetOverlay(
         onDispose { if (plainDismissPending) onDismissRequest() }
     }
 
-    BackHandler(enabled = entered) { dismissWithAnimation() }
+    // 不按 entered 门控:入场动画(~220ms)期间按返回键,原来会穿透到 Activity 把当前页也关掉
+    // (表现为"按返回键回到别的空间"、弹层还留在屏幕上)。只要弹层在组合里就必须吃掉返回键。
+    BackHandler { dismissWithAnimation() }
 
     val scrimColor = if (centered) {
         // 对话框沿用平台 dialog 的遮罩浓度(Theme.Material 的 backgroundDimAmount = 0.6),

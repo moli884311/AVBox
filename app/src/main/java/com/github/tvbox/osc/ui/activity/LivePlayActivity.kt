@@ -216,10 +216,13 @@ class LivePlayActivity : BaseActivity() {
         }
         if (overlayVisible || isBackState) return false
         return when (keyCode) {
-            KeyEvent.KEYCODE_CHANNEL_UP, KeyEvent.KEYCODE_DPAD_UP -> {
+            // 方向键按"列表方向"走:下 = 列表下一台(+1)、上 = 列表上一台(-1)。
+            // 原来 DPAD_DOWN 映射到 playPrevious,列表处于第一台时 -1 会绕到最后一台(表现为"按下键跳到最后")。
+            // 频道键保留机顶盒语义:CHANNEL_UP = 下一台、CHANNEL_DOWN = 上一台。
+            KeyEvent.KEYCODE_CHANNEL_UP, KeyEvent.KEYCODE_DPAD_DOWN -> {
                 playNext(); true
             }
-            KeyEvent.KEYCODE_CHANNEL_DOWN, KeyEvent.KEYCODE_DPAD_DOWN -> {
+            KeyEvent.KEYCODE_CHANNEL_DOWN, KeyEvent.KEYCODE_DPAD_UP -> {
                 playPrevious(); true
             }
             KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER,

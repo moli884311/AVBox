@@ -34,6 +34,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.github.tvbox.osc.util.ScreenUtils
+import kotlinx.coroutines.delay
 
 /**
  * 当前设备是否处于 Android TV 模式。
@@ -202,16 +203,27 @@ fun Modifier.tvCombinedClickable(
 /**
  * 进入页面后把焦点落到 [focusRequester] 上(等第一帧测量完成再请求,避免 NoFocusTarget)。
  * TV 上用于建立"初始焦点"——否则遥控方向键会先触发一次不可预期的焦点搜索。
+ *
+ * 页面首帧可能还是加载骨架(没有任何可聚焦项),此时 requestFocus 会落空;
+ * 因此失败时按帧重试一小段时间,等真正的可聚焦内容(影片卡片/设置行)出现后再落焦点。
  */
 @Composable
 fun Modifier.tvInitialFocus(
     focusRequester: FocusRequester,
     enabled: Boolean = LocalIsTelevision.current,
 ): Modifier {
-    LaunchedEffect(enabled) {
+    LaunchedEffect(enabled, focusRequester) {
         if (!enabled) return@LaunchedEffect
-        withFrameNanos { }
-        runCatching { focusRequester.requestFocus() }
+        repeat(InitialFocusMaxAttempts) {
+            withFrameNanos { }
+            if (runCatching { focusRequester.requestFocus() }.getOrDefault(false)) return@LaunchedEffect
+            delay(InitialFocusRetryDelayMs)
+        }
     }
     return this
 }
+
+/** 初始焦点最多重试帧数(约 1s):足以覆盖首页首屏加载骨架切换为真实卡片的时间。 */
+private const val InitialFocusMaxAttempts = 20
+
+private const val InitialFocusRetryDelayMs = 50L

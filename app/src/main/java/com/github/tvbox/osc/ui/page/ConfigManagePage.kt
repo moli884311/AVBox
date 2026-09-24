@@ -1,5 +1,7 @@
 package com.github.tvbox.osc.ui.page
 
+import android.content.ClipboardManager
+import android.content.Context
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
@@ -68,6 +70,7 @@ import com.github.tvbox.osc.ui.components.AppTopBarScaffold
 import com.github.tvbox.osc.ui.components.LoadStateBox
 import com.github.tvbox.osc.ui.components.LocalSheetDismiss
 import com.github.tvbox.osc.ui.components.LocalSheetDismissThen
+import com.github.tvbox.osc.ui.components.QrInputPanel
 import com.github.tvbox.osc.ui.components.SegmentOption
 import com.github.tvbox.osc.ui.components.SegmentStyle
 import com.github.tvbox.osc.ui.components.SettingsCard
@@ -671,7 +674,7 @@ fun ConfigManageScreen(onNavigateBack: () -> Unit) {
 
     val pending = pendingSwitch
     if (pending != null) {
-        AVBoxAlertDialog(
+    AVBoxAlertDialog(
             onDismissRequest = { pendingSwitch = null },
             title = { Text(stringResource(R.string.dialog_source_disabled_title)) },
             text = {
@@ -920,6 +923,8 @@ private fun AddSubscribeDialog(
 ) {
     var name by remember { mutableStateOf(initialName) }
     var url by remember { mutableStateOf(initialUrl) }
+    var qrMode by remember { mutableStateOf(false) }
+    val context = LocalContext.current
     val urlHint: (@Composable () -> Unit)? = if (urlSupportingText.isEmpty()) {
         null
     } else {
@@ -930,6 +935,16 @@ private fun AddSubscribeDialog(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
+    }
+    val dismissAction: (@Composable () -> Unit)? = if (qrMode) {
+        {
+            TextButton(
+                onClick = { qrMode = false },
+                modifier = Modifier.tvControlFocus(cornerRadius = 20.dp),
+            ) { Text(stringResource(R.string.config_qr_back)) }
+        }
+    } else {
+        null
     }
     AVBoxAlertDialog(
         onDismissRequest = onDismiss,
@@ -942,45 +957,62 @@ private fun AddSubscribeDialog(
                     text = title,
                     modifier = Modifier.weight(1f),
                 )
-                val pickFileInteraction = remember { MutableInteractionSource() }
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .glassSurface(CircleShape, MaterialTheme.colorScheme.surfaceBright)
-                        .tvClickable(pickFileInteraction, cornerRadius = 20.dp) {
-                            onPickFile { picked -> url = picked }
-                        },
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_file_choose),
-                        contentDescription = stringResource(R.string.config_pick_local),
-                        tint = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.size(22.dp),
+                AddSourceIconButton(
+                    iconRes = R.drawable.ic_content_paste,
+                    description = stringResource(R.string.config_paste_clipboard),
+                    onClick = {
+                        val text = readClipboardText(context)
+                        if (text.isNullOrBlank()) {
+                            Toast.makeText(context, context.getString(R.string.config_paste_empty), Toast.LENGTH_SHORT).show()
+                        } else {
+                            url = text.trim()
+                        }
+                    },
+                )
+                Spacer(Modifier.width(6.dp))
+                AddSourceIconButton(
+                    iconRes = R.drawable.ic_qr_code,
+                    description = stringResource(R.string.config_scan_qr),
+                    onClick = { qrMode = true },
+                )
+                Spacer(Modifier.width(6.dp))
+                AddSourceIconButton(
+                    iconRes = R.drawable.ic_file_choose,
+                    description = stringResource(R.string.config_pick_local),
+                    onClick = { onPickFile { picked -> url = picked } },
+                )
+            }
+        },
+        text = {
+            if (qrMode) {
+                QrInputPanel(
+                    onReceived = { received ->
+                        url = received
+                        qrMode = false
+                    },
+                )
+            } else {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    OutlinedTextField(
+                        value = name,
+                        onValueChange = { name = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        label = { Text(stringResource(R.string.config_field_name)) },
+                    )
+                    Spacer(Modifier.height(12.dp))
+                    OutlinedTextField(
+                        value = url,
+                        onValueChange = { url = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        label = { Text(stringResource(R.string.config_field_url)) },
+                        supportingText = urlHint,
                     )
                 }
             }
         },
-        text = {
-            Column(modifier = Modifier.fillMaxWidth()) {
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    label = { Text(stringResource(R.string.config_field_name)) },
-                )
-                Spacer(Modifier.height(12.dp))
-                OutlinedTextField(
-                    value = url,
-                    onValueChange = { url = it },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    label = { Text(stringResource(R.string.config_field_url)) },
-                    supportingText = urlHint,
-                )
-            }
-        },
+        dismissButton = dismissAction,
         confirmButton = {
             val dismissThen = LocalSheetDismissThen.current
             TextButton(
@@ -990,4 +1022,36 @@ private fun AddSubscribeDialog(
             ) { Text(stringResource(R.string.common_save)) }
         },
     )
+}
+
+/** 「添加订阅」标题栏的圆形图标按钮(粘贴 / 扫码 / 选文件共用一套外观)。 */
+@Composable
+private fun AddSourceIconButton(
+    @androidx.annotation.DrawableRes iconRes: Int,
+    description: String,
+    onClick: () -> Unit,
+) {
+    val interaction = remember { MutableInteractionSource() }
+    Box(
+        modifier = Modifier
+            .size(40.dp)
+            .glassSurface(CircleShape, MaterialTheme.colorScheme.surfaceBright)
+            .tvClickable(interaction, cornerRadius = 20.dp) { onClick() },
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            painter = painterResource(iconRes),
+            contentDescription = description,
+            tint = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.size(22.dp),
+        )
+    }
+}
+
+/** 读取系统剪贴板纯文本;空/无内容返回 null。 */
+private fun readClipboardText(context: Context): String? {
+    val manager = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager ?: return null
+    val clip = manager.primaryClip ?: return null
+    if (clip.itemCount == 0) return null
+    return clip.getItemAt(0)?.coerceToText(context)?.toString()
 }

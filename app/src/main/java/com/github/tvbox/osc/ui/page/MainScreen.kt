@@ -50,6 +50,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.Rect
@@ -63,6 +64,7 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
@@ -234,22 +236,28 @@ private fun MainContent() {
     // TV:焦点落在导航栏上时,朝"内容侧"的方向键直接跨到内容区。
     // 几何搜索跨不过覆盖层/Scaffold 这类兄弟节点(实测在侧边栏上按右键切不进主内容),
     // 这里用预览按键显式路由,保证任何形态下都能进出。
-    val navFocusBridge: Modifier = if (isTvLayout) {
-        Modifier.onPreviewKeyEvent { event ->
-            if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
-            val towardContent = when (navAxis) {
-                NavAxis.Vertical -> event.key == Key.DirectionRight
-                NavAxis.Horizontal -> event.key == Key.DirectionUp
-            }
-            if (towardContent) {
-                contentFocusRequester.requestFocus()
-                true
-            } else {
-                false
-            }
+    // 不按 isTvLayout 门控:该回调只在收到方向键时才有动作,手机(无硬件方向键)天然零影响,
+    // 反而能避免"TV 判定偶发为假 → 导航栏进不去内容"。
+    val contentFocusManager = LocalFocusManager.current
+    val navFocusBridge: Modifier = Modifier.onPreviewKeyEvent { event ->
+        if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
+        val towardContent = when (navAxis) {
+            NavAxis.Vertical -> event.key == Key.DirectionRight
+            NavAxis.Horizontal -> event.key == Key.DirectionUp
         }
-    } else {
-        Modifier
+        if (towardContent) {
+            // 首选显式落到内容容器(requestFocus 会落到组内第一个可聚焦子项);
+            // 万一容器暂时没有可聚焦目标,退回几何搜索,避免方向键"按了没反应"。
+            val moved = runCatching { contentFocusRequester.requestFocus() }.getOrDefault(false)
+            if (!moved) {
+                contentFocusManager.moveFocus(
+                    if (navAxis == NavAxis.Vertical) FocusDirection.Right else FocusDirection.Up,
+                )
+            }
+            true
+        } else {
+            false
+        }
     }
     val liquidBackdropBounds: (Size) -> Rect? = remember(density, navBandExtent, navAxis) {
         { size ->
@@ -351,7 +359,9 @@ private fun MainContent() {
                     HorizontalPager(
                         state = pagerState,
                         userScrollEnabled = navAnimationEnabled,
-                        beyondViewportPageCount = 3,
+                        // 只组合当前页:>0 会把相邻 tab 也组合进焦点树,几何方向键搜索会"跨页"跳到
+                        // 看不见的相邻页面上(表现为首页按右键直接切了别的画面、影片卡片反而进不去)。
+                        beyondViewportPageCount = 0,
                         modifier = Modifier
                             .fillMaxSize()
                             .then(if (liquidGlassEnabled) Modifier else Modifier.padding(innerPadding)),

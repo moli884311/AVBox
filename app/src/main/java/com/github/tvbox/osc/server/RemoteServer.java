@@ -98,6 +98,56 @@ public class RemoteServer extends NanoHTTPD {
         return key == null ? null : m3u8Slots.get(key);
     }
 
+    /**
+     * 扫码输入:手机浏览器提交过来的订阅地址(单槽)。
+     * Compose 端轮询 {@code /qr-poll} 取走后清空 —— 取走即消费,避免同一个地址被重复填入。
+     */
+    private static volatile String qrPendingInput = null;
+
+    /** 取走并清空待填入的扫码输入;没有则返回 null。 */
+    public static synchronized String takeQrPendingInput() {
+        String value = qrPendingInput;
+        qrPendingInput = null;
+        return value;
+    }
+
+    /** 手机端提交入口(内部使用,限制长度防止恶意超长内容)。 */
+    private static void putQrPendingInput(String value) {
+        if (value == null) return;
+        String trimmed = value.trim();
+        if (trimmed.length() > 2000) trimmed = trimmed.substring(0, 2000);
+        qrPendingInput = trimmed;
+    }
+
+    /** /qr-input 的输入页:手机扫码后打开,填地址回传给电视。 */
+    private static String qrInputPage() {
+        return "<!doctype html><html lang=\"zh-CN\"><head><meta charset=\"utf-8\">"
+                + "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">"
+                + "<title>输入订阅地址</title><style>"
+                + "body{font-family:-apple-system,system-ui,sans-serif;margin:0;padding:24px;background:#f5f5f7}"
+                + "h1{font-size:20px;margin:0 0 8px}p{color:#666;font-size:14px;margin:0 0 20px}"
+                + "input,button{width:100%;box-sizing:border-box;font-size:16px;padding:14px;border-radius:14px;border:1px solid #ddd}"
+                + "input{margin-bottom:12px}button{border:none;background:#0a84ff;color:#fff;font-weight:600}"
+                + "</style></head><body><h1>输入订阅地址</h1>"
+                + "<p>在下方粘贴/输入直播源或点播源地址，点「发送到电视」。</p>"
+                + "<form method=\"post\" action=\"/qr-input\">"
+                + "<input name=\"url\" type=\"text\" inputmode=\"url\" autocomplete=\"off\" "
+                + "placeholder=\"https://...\" required autofocus>"
+                + "<button type=\"submit\">发送到电视</button></form></body></html>";
+    }
+
+    /** /qr-input 提交后的结果页。 */
+    private static String qrResultPage(boolean ok) {
+        String title = ok ? "已发送" : "内容为空";
+        String tip = ok ? "已把地址发送到电视，可以关闭本页面了。" : "没有收到地址，请返回重试。";
+        return "<!doctype html><html lang=\"zh-CN\"><head><meta charset=\"utf-8\">"
+                + "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">"
+                + "<title>" + title + "</title><style>"
+                + "body{font-family:-apple-system,system-ui,sans-serif;margin:0;padding:48px 24px;text-align:center;background:#f5f5f7}"
+                + "h1{font-size:22px}p{color:#666;font-size:15px}"
+                + "</style></head><body><h1>" + title + "</h1><p>" + tip + "</p></body></html>";
+    }
+
     private void addGetRequestProcess() {
         getRequestList.add(new CacheRequestProcess());
     }
@@ -160,6 +210,18 @@ public class RemoteServer extends NanoHTTPD {
                 fileName = fileName.substring(0, fileName.indexOf('?'));
             }
             if (session.getMethod() == Method.GET) {
+                // 扫码输入:手机端打开的表单页 / 电视端轮询取回填值的接口
+                if (fileName.equals("/qr-input")) {
+                    return NanoHTTPD.newFixedLengthResponse(Response.Status.OK, "text/html; charset=utf-8", qrInputPage());
+                }
+                if (fileName.equals("/qr-poll")) {
+                    // 只服务回环(电视自己)请求:待填入地址可能带订阅 token,不能开给局域网其它客户端
+                    if (!isLocalRequest(session)) {
+                        return NanoHTTPD.newFixedLengthResponse(NanoHTTPD.Response.Status.FORBIDDEN, NanoHTTPD.MIME_PLAINTEXT, "Forbidden");
+                    }
+                    String pending = takeQrPendingInput();
+                    return NanoHTTPD.newFixedLengthResponse(Response.Status.OK, "text/plain; charset=utf-8", pending == null ? "" : pending);
+                }
                 if (isProxyRequest(fileName, session.getParms())) {
                     return handleProxy(session);
                 }
@@ -253,6 +315,28 @@ public class RemoteServer extends NanoHTTPD {
                     return createPlainTextResponse(NanoHTTPD.Response.Status.INTERNAL_ERROR, "SERVER INTERNAL ERROR: IOException: " + IOExc.getMessage());
                 } catch (NanoHTTPD.ResponseException rex) {
                     return createPlainTextResponse(rex.getStatus(), rex.getMessage());
+                }
+                // 扫码输入:手机表单提交(urlencoded body 会被 parseBody 解进 parms)
+                if (fileName.equals("/qr-input")) {
+                    String value = session.getParms().get("url");
+                    if (value == null || value.trim().isEmpty()) {
+                        // 兜底:NanoHTTPD 某些版本不把 urlencoded body 解进 parms,只好自己从 postData 还原
+                        String postData = files.get("postData");
+                        if (postData != null) {
+                            String raw = postData.trim();
+                            if (raw.startsWith("url=")) raw = raw.substring(4);
+                            try {
+                                value = java.net.URLDecoder.decode(raw, "UTF-8");
+                            } catch (Throwable ignored) {
+                                value = raw;
+                            }
+                        }
+                    }
+                    if (value == null || value.trim().isEmpty()) {
+                        return NanoHTTPD.newFixedLengthResponse(Response.Status.OK, "text/html; charset=utf-8", qrResultPage(false));
+                    }
+                    putQrPendingInput(value);
+                    return NanoHTTPD.newFixedLengthResponse(Response.Status.OK, "text/html; charset=utf-8", qrResultPage(true));
                 }
                 for (RequestProcess process : postRequestList) {
                     if (process.isRequest(session, fileName)) {
