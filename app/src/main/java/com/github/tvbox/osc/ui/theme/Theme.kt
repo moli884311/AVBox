@@ -26,6 +26,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.view.WindowCompat
+import com.github.tvbox.osc.ui.tv.LocalIsTelevision
+import com.github.tvbox.osc.ui.tv.rememberIsTelevision
 import com.materialkolor.PaletteStyle
 
 internal fun ComponentActivity.enableTransparentEdgeToEdge() {
@@ -70,7 +72,10 @@ fun AVBoxTheme(
         ApplyAppThemeBars(isDark = darkTheme)
     }
 
-    CompositionLocalProvider(LocalRippleConfiguration provides rememberRippleConfiguration()) {
+    CompositionLocalProvider(
+        LocalRippleConfiguration provides rememberRippleConfiguration(),
+        LocalIsTelevision provides rememberIsTelevision(),
+    ) {
         MaterialTheme(
             colorScheme = colorScheme,
             typography = AVBoxTypography,

@@ -13,13 +13,13 @@ android {
     buildTypes {
         debug {
             ndk {
-                abiFilters += setOf("arm64-v8a")
+                abiFilters += setOf("arm64-v8a", "armeabi-v7a")
             }
         }
         release {
             isMinifyEnabled = false
             ndk {
-                abiFilters += setOf("arm64-v8a")
+                abiFilters += setOf("arm64-v8a", "armeabi-v7a")
             }
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }

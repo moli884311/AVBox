@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   build:
-    name: Build 沫离影视壳子 arm64 release
+    name: Build 沫离影视壳子 arm64+arm32 release
     runs-on: ubuntu-latest
     timeout-minutes: 120
 
@@ -74,9 +74,23 @@ jobs:
       - name: Build release APK
         run: ./gradlew assembleRelease --no-daemon --stacktrace
 
+      - name: Verify APK carries both ARM ABIs
+        run: |
+          set -euo pipefail
+          APK="$(find app/build/outputs/apk -name '*.apk' | head -n1)"
+          [ -n "$APK" ] || { echo "::error::找不到 release APK"; exit 1; }
+          echo "APK=$APK size=$(stat -c%s "$APK")"
+          LIST="$(unzip -l "$APK")"
+          for abi in arm64-v8a armeabi-v7a; do
+            for lib in libplayer.so libijksdl.so libxl_thunder_sdk.so libp2p.so; do
+              echo "$LIST" | grep -q "lib/$abi/$lib" || { echo "::error::$abi 缺少 $lib"; exit 1; }
+            done
+            echo "  $abi: 原生库齐全"
+          done
+
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: moliys-shell-arm64
+          name: moliys-shell-arm
           path: app/build/outputs/apk/**/release/*.apk
           if-no-files-found: error

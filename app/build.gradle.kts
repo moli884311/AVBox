@@ -22,7 +22,7 @@ android {
         versionName = "1.0.3"
         multiDexEnabled = true
         ndk {
-            abiFilters += setOf("arm64-v8a")
+            abiFilters += setOf("arm64-v8a", "armeabi-v7a")
         }
     }
 

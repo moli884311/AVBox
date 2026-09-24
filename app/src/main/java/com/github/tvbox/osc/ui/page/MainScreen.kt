@@ -10,6 +10,7 @@ import androidx.activity.compose.BackHandler
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.foundation.background
+import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -49,6 +50,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
@@ -77,6 +80,7 @@ import com.github.tvbox.osc.ui.navbar.GlassTabItem
 import com.github.tvbox.osc.ui.navbar.NavAxis
 import com.github.tvbox.osc.ui.navbar.NavMetrics
 import com.github.tvbox.osc.ui.theme.LiquidGlassState
+import com.github.tvbox.osc.ui.tv.tvInitialFocus
 import com.github.tvbox.osc.util.AppManager
 import com.github.tvbox.osc.util.BootGuard
 import com.github.tvbox.osc.util.HawkConfig
@@ -134,6 +138,8 @@ private fun MainContent() {
     val scope = rememberCoroutineScope()
     val pagerState = rememberPagerState(pageCount = { AppTab.entries.size })
     val homeViewModel: HomeViewModel = viewModel()
+    // TV:建立初始焦点,让遥控方向键从页面内容(而非不可预期的位置)开始移动
+    val contentFocusRequester = remember { FocusRequester() }
 
     LaunchedEffect(Unit) {
         if (homeViewModel.defaultLiveLaunched) return@LaunchedEffect
@@ -288,6 +294,9 @@ private fun MainContent() {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
+                        .focusRequester(contentFocusRequester)
+                        .focusGroup()
+                        .tvInitialFocus(contentFocusRequester)
                         .then(
                             if (liquidGlassEnabled) {
                                 Modifier.layerBackdrop(liquidBackdrop, liquidBackdropBounds)

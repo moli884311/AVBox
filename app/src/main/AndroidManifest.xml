@@ -6,6 +6,12 @@
         android:name="android.hardware.touchscreen"
         android:required="false" />
 
+    <!-- Android TV 支持:声明 TV 能力(required=false,手机/平板照常安装),
+         配合 MainActivity 的 LEANBACK_LAUNCHER 入口,TV 桌面上会显示本应用 -->
+    <uses-feature
+        android:name="android.software.leanback"
+        android:required="false" />
+
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
@@ -55,6 +61,7 @@
     <application
         android:name=".base.App"
         android:allowBackup="true"
+        android:banner="@mipmap/ic_banner"
         android:configChanges="orientation|keyboardHidden|screenSize"
         android:hardwareAccelerated="true"
         android:icon="@mipmap/ic_launcher"
@@ -78,6 +85,7 @@
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
             </intent-filter>
         </activity>
 
