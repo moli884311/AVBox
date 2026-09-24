@@ -80,6 +80,8 @@ import com.github.tvbox.osc.ui.navbar.GlassTabItem
 import com.github.tvbox.osc.ui.navbar.NavAxis
 import com.github.tvbox.osc.ui.navbar.NavMetrics
 import com.github.tvbox.osc.ui.theme.LiquidGlassState
+import com.github.tvbox.osc.ui.tv.TV_OVERSCAN_DP
+import com.github.tvbox.osc.ui.tv.rememberIsTelevision
 import com.github.tvbox.osc.ui.tv.tvInitialFocus
 import com.github.tvbox.osc.util.AppManager
 import com.github.tvbox.osc.util.BootGuard
@@ -228,17 +230,24 @@ private fun MainContent() {
     // 作为"内容内边距"下发,不用容器 padding:页面必须保持全出血,
     // 否则背景被缩到导航栏之上,玻璃就取不到内容、退化成一块纯色
     val navReserve = NavMetrics.reserveDp(liquidGlassEnabled, navAxis).dp
+    // TV overscan:电视普遍裁掉边缘约 5%,关键内容留出安全边距(手机端为 0)
+    val overscan = if (rememberIsTelevision()) TV_OVERSCAN_DP.dp else 0.dp
     val pageContentPadding: PaddingValues = when {
         railMode -> PaddingValues(
-            start = navReserve + navBarsPadding.calculateStartPadding(layoutDirection),
-            bottom = navBarsPadding.calculateBottomPadding(),
+            start = navReserve + navBarsPadding.calculateStartPadding(layoutDirection) + overscan,
+            top = overscan,
+            end = overscan,
+            bottom = navBarsPadding.calculateBottomPadding() + overscan,
         )
 
         liquidGlassEnabled -> PaddingValues(
-            bottom = navBarsPadding.calculateBottomPadding() + navReserve,
+            start = overscan,
+            top = overscan,
+            end = overscan,
+            bottom = navBarsPadding.calculateBottomPadding() + navReserve + overscan,
         )
 
-        else -> PaddingValues(0.dp)
+        else -> PaddingValues(overscan)
     }
     val tabLabels = AppTab.entries.map { stringResource(it.labelRes) }
     val glassTabs = remember(tabLabels) {
@@ -364,16 +373,16 @@ private fun MainContent() {
                             .align(Alignment.BottomCenter)
                             .fillMaxWidth()
                             .windowInsetsPadding(WindowInsets.navigationBars)
-                            .padding(horizontal = 16.dp)
-                            .padding(bottom = NavMetrics.MARGIN_DP.dp)
+                            .padding(horizontal = 16.dp + overscan)
+                            .padding(bottom = NavMetrics.MARGIN_DP.dp + overscan)
                     } else {
                         Modifier
                             .align(Alignment.CenterStart)
                             .fillMaxHeight()
                             // 竖条是满高的,上下都要让:只用 navigationBars 会顶到状态栏里
                             .windowInsetsPadding(WindowInsets.systemBars)
-                            .padding(vertical = 16.dp)
-                            .padding(start = NavMetrics.MARGIN_DP.dp)
+                            .padding(vertical = 16.dp + overscan)
+                            .padding(start = NavMetrics.MARGIN_DP.dp + overscan)
                     },
                 ) {
                     FloatingNavBar(

@@ -9,6 +9,7 @@ import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -62,6 +63,7 @@ import androidx.compose.ui.util.fastCoerceIn
 import androidx.compose.ui.util.fastRoundToInt
 import androidx.compose.ui.util.lerp
 import com.github.tvbox.osc.ui.components.GlassHighlight
+import com.github.tvbox.osc.ui.tv.tvFocusableCard
 import com.github.tvbox.osc.ui.theme.GLASS_THICKNESS_ALPHA
 import com.github.tvbox.osc.ui.theme.GLASS_THICKNESS_DP
 import com.github.tvbox.osc.ui.theme.LiquidGlassConfig
@@ -631,6 +633,8 @@ private fun NavTabItem(
     role: Role = Role.Tab,
 ) {
     val scale = LocalNavTabScale.current
+    // TV:导航项自带 interactionSource,聚焦时描边+放大(手机端 tvFocusableCard 原样返回)
+    val interactionSource = remember { MutableInteractionSource() }
     val iconColor by animateColorAsState(
         targetValue = if (selected) MaterialTheme.colorScheme.onSecondaryContainer
         else MaterialTheme.colorScheme.onSurfaceVariant,
@@ -648,10 +652,15 @@ private fun NavTabItem(
             .clip(ContinuousCapsule)
             .clickable(
                 enabled = enabled,
-                interactionSource = null,
+                interactionSource = interactionSource,
                 indication = null,
                 role = role,
                 onClick = onClick
+            )
+            .tvFocusableCard(
+                interactionSource = interactionSource,
+                cornerRadius = 28.dp,
+                focusedScale = 1.12f,
             )
             .graphicsLayer {
                 val currentScale = scale()

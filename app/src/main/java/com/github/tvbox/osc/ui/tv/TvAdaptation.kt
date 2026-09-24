@@ -54,6 +54,9 @@ const val TV_FOCUSED_SCALE = 1.06f
 /** 触摸按压时的缩小系数(手机原有手感,保持不变)。 */
 const val TV_PRESSED_SCALE = 0.97f
 
+/** TV 屏边 overscan 安全边距(dp):电视普遍裁掉边缘约 5%,关键内容需留白。 */
+const val TV_OVERSCAN_DP = 24f
+
 /**
  * 统一的"聚焦/按压"缩放动画。
  * TV 上聚焦放大、按压回缩;手机上只保留原有的按压回缩。
