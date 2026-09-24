@@ -95,6 +95,8 @@ import com.github.tvbox.osc.ui.components.TopBarActionBox
 import com.github.tvbox.osc.ui.components.glassTopBarSurface
 import com.github.tvbox.osc.ui.player.PlayerTipBridge
 import com.github.tvbox.osc.ui.theme.AppThemeState
+import com.github.tvbox.osc.ui.tv.tvClickable
+import com.github.tvbox.osc.ui.tv.tvFocusableCard
 import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import kotlinx.coroutines.Dispatchers
@@ -239,10 +241,11 @@ fun MusicPlayerScreen(
                 ) {
                     itemsIndexed(state.queue) { index, name ->
                         val current = index == state.queueIndex
+                        val rowInteraction = remember { MutableInteractionSource() }
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clickable {
+                                .tvClickable(rowInteraction, cornerRadius = 8.dp) {
                                     queueVisible = false
                                     onSelectQueue(index)
                                 }
@@ -462,7 +465,8 @@ private fun BottomActionItem(
                 interactionSource = interactionSource,
                 indication = ripple(),
                 onClick = onClick,
-            ),
+            )
+            .tvFocusableCard(interactionSource, cornerRadius = 16.dp),
         contentAlignment = Alignment.Center,
     ) {
         Icon(
@@ -583,6 +587,7 @@ private fun MusicLyrics(
     ) {
         itemsIndexed(lines) { index, line ->
             val active = index == current
+            val lineInteraction = remember { MutableInteractionSource() }
             Text(
                 text = line.text,
                 style = if (active) MaterialTheme.typography.titleMedium else MaterialTheme.typography.bodyMedium,
@@ -593,7 +598,7 @@ private fun MusicLyrics(
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { onSeekLine(line.timeMs) }
+                    .tvClickable(lineInteraction, cornerRadius = 8.dp) { onSeekLine(line.timeMs) }
                     .padding(vertical = 6.dp),
             )
         }
@@ -750,12 +755,15 @@ private fun MusicControls(
             onClick = onPrevious,
         )
         Spacer(Modifier.width(SkipToPlayGap))
+        val playInteraction = remember { MutableInteractionSource() }
         Box(
             modifier = Modifier
                 .size(width = PlayButtonWidth, height = PlayButtonHeight)
                 .clip(PlayButtonShape)
                 .background(MaterialTheme.colorScheme.primary)
-                .clickable(onClick = onTogglePlay),
+                .tvClickable(playInteraction, cornerRadius = 24.dp, focusedScale = 1.04f) {
+                    onTogglePlay()
+                },
             contentAlignment = Alignment.Center,
         ) {
             if (buffering) {
@@ -790,12 +798,13 @@ private fun ScallopControlButton(
     label: String,
     onClick: () -> Unit,
 ) {
+    val interaction = remember { MutableInteractionSource() }
     Box(
         modifier = Modifier
             .size(SkipButtonSize)
             .clip(ScallopIconShape)
             .background(MaterialTheme.colorScheme.surfaceBright.copy(alpha = 0.5f))
-            .clickable(onClick = onClick),
+            .tvClickable(interaction, cornerRadius = 24.dp, focusedScale = 1.04f) { onClick() },
         contentAlignment = Alignment.Center,
     ) {
         Icon(

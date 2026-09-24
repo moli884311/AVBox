@@ -14,6 +14,7 @@ import androidx.compose.animation.togetherWith
 import com.github.tvbox.osc.ui.theme.enableTransparentEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -85,6 +86,7 @@ import com.github.tvbox.osc.ui.components.rememberVodCardMenuState
 import com.github.tvbox.osc.ui.components.SettingsIconBadge
 import com.github.tvbox.osc.ui.theme.AVBoxTheme
 import com.github.tvbox.osc.ui.theme.cardContainer
+import com.github.tvbox.osc.ui.tv.tvClickable
 import com.github.tvbox.osc.ui.activity.PartitionListActivity
 import com.github.tvbox.osc.ui.page.ManageActionIcon
 import com.github.tvbox.osc.ui.page.openVodCardOrDetail
@@ -491,11 +493,12 @@ fun SearchScreen(vm: SearchViewModel = viewModel()) {
             )
         },
         navigationIcon = {
+            val backInteraction = remember { MutableInteractionSource() }
             Box(
                 modifier = Modifier
                     .size(40.dp)
                     .glassTopBarSurface(CircleShape, MaterialTheme.colorScheme.surfaceBright)
-                    .clickable { activity?.finish() },
+                    .tvClickable(backInteraction, cornerRadius = 20.dp) { activity?.finish() },
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
@@ -684,36 +687,12 @@ private fun SearchIdleContent(
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             pair.forEachIndexed { colIdx, title ->
-                                val rank = rowIdx * 2 + colIdx + 1
-                                Row(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .clip(RoundedCornerShape(8.dp))
-                                        .clickable { onSearch(title) }
-                                        .padding(vertical = 8.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                ) {
-                                    Text(
-                                        text = rank.toString(),
-                                        style = MaterialTheme.typography.labelLarge,
-                                        color = if (rank <= 3) {
-                                            MaterialTheme.colorScheme.primary
-                                        } else {
-                                            MaterialTheme.colorScheme.onSurfaceVariant
-                                        },
-                                        modifier = Modifier.width(20.dp),
-                                    )
-                                    Text(
-                                        text = title,
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurface,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis,
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .padding(start = 10.dp),
-                                    )
-                                }
+                                HotSearchHit(
+                                    rank = rowIdx * 2 + colIdx + 1,
+                                    title = title,
+                                    onClick = { onSearch(title) },
+                                    modifier = Modifier.weight(1f),
+                                )
                             }
                             if (pair.size == 1) {
                                 Spacer(modifier = Modifier.weight(1f))
@@ -725,6 +704,45 @@ private fun SearchIdleContent(
         }
     }
 }
+
+@Composable
+private fun HotSearchHit(
+    rank: Int,
+    title: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val interaction = remember { MutableInteractionSource() }
+    Row(
+        modifier = modifier
+            .clip(RoundedCornerShape(8.dp))
+            .tvClickable(interaction, cornerRadius = 8.dp) { onClick() }
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = rank.toString(),
+            style = MaterialTheme.typography.labelLarge,
+            color = if (rank <= 3) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant
+            },
+            modifier = Modifier.width(20.dp),
+        )
+        Text(
+            text = title,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = 10.dp),
+        )
+    }
+}
+
 @Composable
 private fun SearchResultsContent(
     results: List<SearchViewModel.SourceResult>,
@@ -854,6 +872,7 @@ private fun SearchListResults(
             }
         }
         itemsIndexed(shown, key = { _, r -> r.sourceKey }) { index, result ->
+            val openAllInteraction = remember { MutableInteractionSource() }
             Column(modifier = Modifier.padding(top = if (index == 0) 12.dp else 24.dp)) {
                 Row(
                     modifier = Modifier
@@ -871,7 +890,7 @@ private fun SearchListResults(
                         modifier = Modifier
                             .clip(RoundedCornerShape(18.dp))
                             .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.7f))
-                            .clickable {
+                            .tvClickable(openAllInteraction, cornerRadius = 18.dp) {
                                 PartitionListActivity.startForSearch(context, result.videos, result.sourceName)
                             }
                             .padding(horizontal = 8.dp, vertical = 4.dp),

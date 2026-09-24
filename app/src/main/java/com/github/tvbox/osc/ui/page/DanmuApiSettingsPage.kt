@@ -2,6 +2,7 @@ package com.github.tvbox.osc.ui.page
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -42,6 +43,7 @@ import com.github.tvbox.osc.ui.components.AVBoxAlertDialog
 import com.github.tvbox.osc.ui.components.AppTopBarScaffold
 import com.github.tvbox.osc.ui.components.LocalSheetDismissThen
 import com.github.tvbox.osc.ui.components.TopBarActionBox
+import com.github.tvbox.osc.ui.tv.tvClickable
 import com.github.tvbox.osc.util.DanmuSourceStore
 import com.github.tvbox.osc.util.DanmakuSpeedTester
 import kotlinx.coroutines.Dispatchers
@@ -198,12 +200,13 @@ private fun SourceRow(
     val scheme = MaterialTheme.colorScheme
     val container = if (item.enabled) scheme.primaryContainer else scheme.surfaceContainer
     val onContainer = if (item.enabled) scheme.onPrimaryContainer else scheme.onSurfaceVariant
+    val interaction = remember { MutableInteractionSource() }
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
             .background(container)
-            .clickable(onClick = onClick)
+            .tvClickable(interaction, cornerRadius = 16.dp) { onClick() }
             .padding(start = 16.dp, end = 4.dp, top = 12.dp, bottom = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {

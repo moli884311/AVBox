@@ -809,6 +809,7 @@ private fun SubscribeCard(
     onCheckedChange: (Boolean) -> Unit,
 ) {
     val shape = RoundedCornerShape(28.dp)
+    val interaction = remember { MutableInteractionSource() }
     Surface(
         modifier = modifier.fillMaxWidth(),
         shape = shape,
@@ -818,7 +819,12 @@ private fun SubscribeCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(shape)
-                .combinedClickable(onClick = onClick, onLongClick = onLongClick)
+                .tvCombinedClickable(
+                    interaction,
+                    cornerRadius = 28.dp,
+                    onLongClick = onLongClick,
+                    onClick = onClick,
+                )
                 .padding(horizontal = 16.dp, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -918,11 +924,14 @@ private fun AddSubscribeDialog(
                     text = title,
                     modifier = Modifier.weight(1f),
                 )
+                val pickFileInteraction = remember { MutableInteractionSource() }
                 Box(
                     modifier = Modifier
                         .size(40.dp)
                         .glassSurface(CircleShape, MaterialTheme.colorScheme.surfaceBright)
-                        .clickable { onPickFile { picked -> url = picked } },
+                        .tvClickable(pickFileInteraction, cornerRadius = 20.dp) {
+                            onPickFile { picked -> url = picked }
+                        },
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(

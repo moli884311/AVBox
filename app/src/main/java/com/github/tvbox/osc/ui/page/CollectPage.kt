@@ -9,7 +9,7 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -62,6 +62,7 @@ import com.github.tvbox.osc.event.RefreshEvent
 import com.github.tvbox.osc.ui.WindowSize
 import com.github.tvbox.osc.ui.components.AppTopBarScaffold
 import com.github.tvbox.osc.ui.components.LoadStateBox
+import com.github.tvbox.osc.ui.tv.tvCombinedClickable
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
@@ -254,12 +255,19 @@ private fun CollectCard(
     onClick: () -> Unit,
     onLongClick: () -> Unit,
 ) {
+    val interaction = remember { MutableInteractionSource() }
     Box(
         modifier = modifier
             .fillMaxWidth()
             .aspectRatio(2f / 3f)
             .clip(RoundedCornerShape(16.dp))
-            .combinedClickable(onClick = onClick, onLongClick = onLongClick),
+            .tvCombinedClickable(
+                interaction,
+                cornerRadius = 16.dp,
+                focusedScale = 1.03f,
+                onLongClick = onLongClick,
+                onClick = onClick,
+            ),
     ) {
         AsyncImage(
             model = item.pic,

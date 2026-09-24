@@ -6,6 +6,7 @@ import android.content.res.Configuration
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -83,6 +84,7 @@ import com.github.tvbox.osc.ui.components.LocalSheetDismiss
 import com.github.tvbox.osc.ui.components.VodCard
 import com.github.tvbox.osc.ui.components.VodCardMenu
 import com.github.tvbox.osc.ui.components.rememberVodCardMenuState
+import com.github.tvbox.osc.ui.tv.tvClickable
 import com.github.tvbox.osc.ui.page.openVodCardOrDetail
 import com.github.tvbox.osc.ui.player.PlayerTipBridge
 import kotlinx.coroutines.delay
@@ -151,6 +153,7 @@ fun DetailScreen(activity: DetailActivity, vm: DetailViewModel) {
         }
     }
 
+    val expandInteraction = remember { MutableInteractionSource() }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -196,7 +199,7 @@ fun DetailScreen(activity: DetailActivity, vm: DetailViewModel) {
                             bottom = (16.dp + playerDim(R.dimen.vs_30) / 2 - 20.dp).coerceAtLeast(0.dp),
                         )
                         .size(40.dp)
-                        .clickable { vm.setFullScreen(true) }
+                        .tvClickable(expandInteraction, cornerRadius = 20.dp) { vm.setFullScreen(true) }
                         .padding(9.dp),
                 )
             }
@@ -262,6 +265,8 @@ private fun DetailContent(
     ) {
         item(key = "header") {
             val desc = remember(info.des) { removeHtmlTag(info.des) }
+            val descTextInteraction = remember { MutableInteractionSource() }
+            val descToggleInteraction = remember { MutableInteractionSource() }
             Column(
                 modifier = Modifier
                     .padding(start = 6.dp, end = 6.dp, top = 12.dp)
@@ -365,14 +370,18 @@ private fun DetailContent(
                             overflow = TextOverflow.Ellipsis,
                             modifier = Modifier
                                 .clip(RoundedCornerShape(8.dp))
-                                .clickable { descExpanded = !descExpanded },
+                                .tvClickable(descTextInteraction, cornerRadius = 8.dp) {
+                                    descExpanded = !descExpanded
+                                },
                         )
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
                                 .padding(top = 4.dp)
                                 .clip(RoundedCornerShape(8.dp))
-                                .clickable { descExpanded = !descExpanded },
+                                .tvClickable(descToggleInteraction, cornerRadius = 8.dp) {
+                                    descExpanded = !descExpanded
+                                },
                         ) {
                             Spacer(Modifier.weight(1f))
                             Text(
@@ -523,12 +532,13 @@ private fun EpisodeRow(
 
 @Composable
 private fun PillAction(iconRes: Int, text: String, onClick: () -> Unit) {
+    val interaction = remember { MutableInteractionSource() }
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .clip(RoundedCornerShape(50))
             .background(MaterialTheme.colorScheme.surfaceContainer)
-            .clickable(onClick = onClick)
+            .tvClickable(interaction, cornerRadius = 50.dp) { onClick() }
             .padding(horizontal = 12.dp, vertical = 8.dp),
     ) {
         Icon(

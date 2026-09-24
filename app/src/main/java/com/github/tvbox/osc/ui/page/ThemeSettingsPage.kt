@@ -5,6 +5,7 @@ package com.github.tvbox.osc.ui.page
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -66,6 +67,7 @@ import com.github.tvbox.osc.ui.theme.PaletteStyles
 import com.github.tvbox.osc.ui.theme.PresetSeeds
 import com.github.tvbox.osc.ui.theme.ThemeMode
 import com.github.tvbox.osc.ui.theme.ThemeSource
+import com.github.tvbox.osc.ui.tv.tvClickable
 import com.materialkolor.PaletteStyle
 import kotlin.math.roundToInt
 
@@ -398,11 +400,12 @@ private fun CustomSeedRow(seedArgb: Int, enabled: Boolean, onClick: () -> Unit) 
         )
         Spacer(Modifier.width(16.dp))
         val seedShape = MaterialTheme.shapes.small
+        val interaction = remember { MutableInteractionSource() }
         Surface(
             modifier = Modifier
                 .size(40.dp)
                 .clip(seedShape)
-                .clickable(enabled = enabled, onClick = onClick),
+                .tvClickable(interaction, cornerRadius = 16.dp, enabled = enabled) { onClick() },
             shape = seedShape,
             color = Color(seedArgb),
             border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
@@ -512,11 +515,14 @@ private fun PresetSeedCard(
     }
     val borderColor = if (selected) MaterialTheme.colorScheme.primary else Color.Transparent
     val cardShape = RoundedCornerShape(16.dp)
+    val interaction = remember { MutableInteractionSource() }
     Surface(
         modifier = modifier
             .aspectRatio(1f)
             .clip(cardShape)
-            .clickable(enabled = enabled, onClick = onClick),
+            .tvClickable(interaction, cornerRadius = 16.dp, enabled = enabled, focusedScale = 1.03f) {
+                onClick()
+            },
         shape = cardShape,
         color = previewScheme.surfaceContainer,
         border = BorderStroke(2.dp, borderColor),

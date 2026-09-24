@@ -10,6 +10,7 @@ import android.widget.Toast
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -97,6 +98,7 @@ import com.github.tvbox.osc.ui.components.VodCardMenu
 import com.github.tvbox.osc.ui.components.glassTopBarSurface
 import com.github.tvbox.osc.ui.components.rememberVodCardMenuState
 import com.github.tvbox.osc.ui.theme.cardContainer
+import com.github.tvbox.osc.ui.tv.tvClickable
 import com.github.tvbox.osc.util.HomeSettings
 import com.github.tvbox.osc.util.SiteSearch
 import com.kyant.capsule.ContinuousCapsule
@@ -145,6 +147,7 @@ fun HomePage(vm: HomeViewModel, contentPadding: PaddingValues = PaddingValues(0.
         topBarStartInset = navStart,
         titleContent = {
             BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+                val sourceCapsuleInteraction = remember { MutableInteractionSource() }
                 Row(
                     modifier = Modifier
                         .widthIn(
@@ -155,7 +158,9 @@ fun HomePage(vm: HomeViewModel, contentPadding: PaddingValues = PaddingValues(0.
                         )
                         .glassTopBarSurface(ContinuousCapsule, MaterialTheme.colorScheme.cardContainer)
                         .heightIn(min = 40.dp)
-                        .clickable { showSourceSheet = true }
+                        .tvClickable(sourceCapsuleInteraction, cornerRadius = 20.dp) {
+                            showSourceSheet = true
+                        }
                         .padding(horizontal = 12.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
@@ -195,11 +200,13 @@ fun HomePage(vm: HomeViewModel, contentPadding: PaddingValues = PaddingValues(0.
             }
         },
         actions = {
+            val settingsInteraction = remember { MutableInteractionSource() }
+            val searchInteraction = remember { MutableInteractionSource() }
             Box(
                 modifier = Modifier
                     .size(40.dp)
                     .glassTopBarSurface(CircleShape, MaterialTheme.colorScheme.surfaceBright)
-                    .clickable { showSearchSettings = true },
+                    .tvClickable(settingsInteraction, cornerRadius = 20.dp) { showSearchSettings = true },
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
@@ -213,7 +220,7 @@ fun HomePage(vm: HomeViewModel, contentPadding: PaddingValues = PaddingValues(0.
                 modifier = Modifier
                     .size(40.dp)
                     .glassTopBarSurface(CircleShape, MaterialTheme.colorScheme.surfaceBright)
-                    .clickable {
+                    .tvClickable(searchInteraction, cornerRadius = 20.dp) {
                         context.startActivity(Intent(context, SearchActivity::class.java))
                     },
                 contentAlignment = Alignment.Center,
@@ -522,6 +529,7 @@ private fun PartitionSection(
     onRetry: (() -> Unit)? = null,
     cardWidth: Dp = 110.dp,
 ) {
+    val openAllInteraction = remember { MutableInteractionSource() }
     Column(modifier = Modifier.padding(vertical = 8.dp)) {
         Row(
             modifier = Modifier
@@ -540,7 +548,7 @@ private fun PartitionSection(
                     modifier = Modifier
                         .clip(RoundedCornerShape(18.dp))
                         .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.7f))
-                        .clickable(onClick = onOpenAll)
+                        .tvClickable(openAllInteraction, cornerRadius = 18.dp) { onOpenAll() }
                         .padding(horizontal = 8.dp, vertical = 4.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {

@@ -7,7 +7,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -61,6 +61,8 @@ import com.github.tvbox.osc.R
 import com.github.tvbox.osc.bean.Movie
 import com.github.tvbox.osc.ui.components.PressableCard
 import com.github.tvbox.osc.ui.theme.cardContainer
+import com.github.tvbox.osc.ui.tv.tvClickable
+import com.github.tvbox.osc.ui.tv.tvCombinedClickable
 import com.github.tvbox.osc.util.SearchSettings
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -70,6 +72,7 @@ internal fun HistoryChip(
     onClick: () -> Unit,
     onLongClick: () -> Unit,
 ) {
+    val interaction = remember { MutableInteractionSource() }
     Surface(
         shape = RoundedCornerShape(20.dp),
         color = Color.Transparent,
@@ -82,7 +85,12 @@ internal fun HistoryChip(
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier
-                .combinedClickable(onClick = onClick, onLongClick = onLongClick)
+                .tvCombinedClickable(
+                    interaction,
+                    cornerRadius = 20.dp,
+                    onLongClick = onLongClick,
+                    onClick = onClick,
+                )
                 .padding(horizontal = 12.dp, vertical = 6.dp),
         )
     }
@@ -101,6 +109,7 @@ internal fun LayoutSwitchAction(
     onSelect: (SearchSettings.SearchLayout) -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
+    val interaction = remember { MutableInteractionSource() }
     Box {
         Icon(
             painter = painterResource(R.drawable.ic_more_vert),
@@ -108,7 +117,7 @@ internal fun LayoutSwitchAction(
             tint = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier
                 .clip(RoundedCornerShape(50))
-                .clickable { expanded = true }
+                .tvClickable(interaction, cornerRadius = 15.dp) { expanded = true }
                 .padding(4.dp)
                 .size(22.dp),
         )

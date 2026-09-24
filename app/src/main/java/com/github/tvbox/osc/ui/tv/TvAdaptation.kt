@@ -6,7 +6,12 @@ import android.content.res.Configuration
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.LocalIndication
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.InteractionSource
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -127,6 +132,49 @@ fun Modifier.tvFocusableCard(
         }
         .tvFocusBorder(focused = focused, cornerRadius = cornerRadius, color = borderColor)
 }
+
+/**
+ * 等价于 [clickable],但额外叠加 [tvFocusableCard] 的 TV 聚焦视觉。
+ *
+ * 保留与默认 `clickable` 完全一致的触摸反馈([LocalIndication]),手机上零行为差异;
+ * TV 上则由 [interactionSource] 驱动"放大 + 描边"。用于把散落的裸 `clickable`
+ * 统一接入遥控焦点体系,免去每处手写 indication/interactionSource 样板。
+ */
+@Composable
+fun Modifier.tvClickable(
+    interactionSource: MutableInteractionSource,
+    cornerRadius: Dp,
+    enabled: Boolean = true,
+    focusedScale: Float = 1f,
+    onClick: () -> Unit,
+): Modifier = this
+    .clickable(
+        interactionSource = interactionSource,
+        indication = LocalIndication.current,
+        enabled = enabled,
+        onClick = onClick,
+    )
+    .tvFocusableCard(interactionSource, cornerRadius, focusedScale = focusedScale)
+
+/** [clickable] 的长按版本,语义同 [tvClickable]。 */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun Modifier.tvCombinedClickable(
+    interactionSource: MutableInteractionSource,
+    cornerRadius: Dp,
+    enabled: Boolean = true,
+    focusedScale: Float = 1f,
+    onLongClick: (() -> Unit)? = null,
+    onClick: () -> Unit,
+): Modifier = this
+    .combinedClickable(
+        interactionSource = interactionSource,
+        indication = LocalIndication.current,
+        enabled = enabled,
+        onLongClick = onLongClick,
+        onClick = onClick,
+    )
+    .tvFocusableCard(interactionSource, cornerRadius, focusedScale = focusedScale)
 
 /**
  * 进入页面后把焦点落到 [focusRequester] 上(等第一帧测量完成再请求,避免 NoFocusTarget)。

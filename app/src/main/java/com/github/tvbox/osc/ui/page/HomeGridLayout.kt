@@ -4,6 +4,7 @@ import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -68,6 +69,7 @@ import com.github.tvbox.osc.ui.components.FilterSheet
 import com.github.tvbox.osc.ui.components.SkeletonBox
 import com.github.tvbox.osc.ui.components.VodCard
 import com.github.tvbox.osc.ui.components.VodCardStyle
+import com.github.tvbox.osc.ui.tv.tvClickable
 import com.kyant.capsule.ContinuousCapsule
 import kotlinx.coroutines.flow.first
 
@@ -392,11 +394,12 @@ private fun HomeSortTabRow(
             }
         }
         if (showFilter) {
+            val filterInteraction = remember { MutableInteractionSource() }
             Box(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
-                    .clickable(onClick = onFilter),
+                    .tvClickable(filterInteraction, cornerRadius = 20.dp) { onFilter() },
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
@@ -480,6 +483,7 @@ private fun HomeFilterChip(
     modifier: Modifier = Modifier,
     textAlign: TextAlign? = null,
 ) {
+    val chipInteraction = remember { MutableInteractionSource() }
     Text(
         text = text,
         style = MaterialTheme.typography.labelLarge,
@@ -500,7 +504,7 @@ private fun HomeFilterChip(
                     MaterialTheme.colorScheme.surfaceBright
                 }
             )
-            .clickable(onClick = onClick)
+            .tvClickable(chipInteraction, cornerRadius = 50.dp) { onClick() }
             .padding(horizontal = HomeFilterChipPadding, vertical = 7.dp),
     )
 }

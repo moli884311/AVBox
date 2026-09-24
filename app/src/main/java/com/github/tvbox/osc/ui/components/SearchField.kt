@@ -1,6 +1,6 @@
 package com.github.tvbox.osc.ui.components
 
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -19,6 +19,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -29,6 +30,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.github.tvbox.osc.R
 import com.github.tvbox.osc.ui.theme.cardContainer
+import com.github.tvbox.osc.ui.tv.tvClickable
 import com.kyant.capsule.ContinuousCapsule
 
 /** 取不到顶栏 backdrop 的场合(弹层)用空底档:两档都跟随液态玻璃开关,只是没有内容可折射 */
@@ -41,6 +43,7 @@ fun SearchField(
     hint: String = stringResource(R.string.search_field_hint),
     trailing: (@Composable () -> Unit)? = null,
 ) {
+    val clearInteraction = remember { MutableInteractionSource() }
     val glass = if (LocalTopBarGlassBackdrop.current != null) {
         Modifier.glassTopBarSurface(ContinuousCapsule, MaterialTheme.colorScheme.cardContainer)
     } else {
@@ -94,7 +97,7 @@ fun SearchField(
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier
                     .clip(RoundedCornerShape(50))
-                    .clickable { onQueryChange("") }
+                    .tvClickable(clearInteraction, cornerRadius = 14.dp) { onQueryChange("") }
                     .padding(4.dp)
                     .size(18.dp),
             )

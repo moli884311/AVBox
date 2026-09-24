@@ -1,7 +1,7 @@
 package com.github.tvbox.osc.ui.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.github.tvbox.osc.R
 import com.github.tvbox.osc.bean.Movie
+import com.github.tvbox.osc.ui.tv.tvClickable
 import kotlin.math.abs
 
 private const val HERO_PAGES_PER_SET = 100_000
@@ -66,6 +68,7 @@ fun HeroCarousel(
         pageSpacing = 12.dp,
     ) { page ->
         val video = videos[page % n]
+        val cardInteraction = remember { MutableInteractionSource() }
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -84,7 +87,9 @@ fun HeroCarousel(
                     alpha = 1f - 0.25f * d
                 }
                 .clip(RoundedCornerShape(24.dp))
-                .clickable { onCardClick(video) },
+                .tvClickable(cardInteraction, cornerRadius = 24.dp, focusedScale = 1.03f) {
+                    onCardClick(video)
+                },
         ) {
             AsyncImage(
                 model = video.pic,

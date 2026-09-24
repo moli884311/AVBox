@@ -5,6 +5,7 @@ package com.github.tvbox.osc.ui.activity
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.layout.Arrangement
@@ -84,6 +85,7 @@ import com.github.tvbox.osc.ui.components.SettingsGroup
 import com.github.tvbox.osc.ui.components.SettingsOptionRow
 import com.github.tvbox.osc.ui.components.SettingsSwitchRow
 import com.github.tvbox.osc.ui.theme.cardContainer
+import com.github.tvbox.osc.ui.tv.tvClickable
 import xyz.doikki.videoplayer.player.VideoView
 import java.util.ArrayList
 import java.util.Date
@@ -306,10 +308,13 @@ private fun PlayerCornerButtons(activity: LivePlayActivity, modifier: Modifier) 
 
 @Composable
 private fun PlayerCornerButton(icon: @Composable () -> Unit, onClick: () -> Unit) {
+    val interaction = remember { MutableInteractionSource() }
     Surface(
         shape = RoundedCornerShape(50),
         color = Color.Black.copy(alpha = 0.4f),
-        modifier = Modifier.clip(RoundedCornerShape(50)).clickable(onClick = onClick),
+        modifier = Modifier
+            .clip(RoundedCornerShape(50))
+            .tvClickable(interaction, cornerRadius = 50.dp) { onClick() },
     ) {
         Box(modifier = Modifier.size(34.dp), contentAlignment = Alignment.Center) { icon() }
     }
@@ -451,10 +456,13 @@ private fun ChannelListSection(activity: LivePlayActivity, modifier: Modifier) {
 private fun GroupHeaderRow(activity: LivePlayActivity, group: LiveChannelGroup) {
     val expanded = activity.expandedGroups.contains(group.groupIndex)
     val locked = group.groupPassword.isNotEmpty() && !activity.isPasswordConfirmedForUi(group.groupIndex)
+    val interaction = remember { MutableInteractionSource() }
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { activity.toggleChannelGroup(group.groupIndex) }
+            .tvClickable(interaction, cornerRadius = 8.dp) {
+                activity.toggleChannelGroup(group.groupIndex)
+            }
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -493,11 +501,14 @@ private fun ChannelRow(
     val group = row.group ?: return
     val selected = group.groupIndex == activity.currentChannelGroupIndex &&
             channel.channelIndex == activity.currentLiveChannelIndex
+    val interaction = remember { MutableInteractionSource() }
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .background(if (selected) MaterialTheme.colorScheme.cardContainer else Color.Transparent)
-            .clickable { activity.selectChannel(group.groupIndex, row.channelPos) }
+            .tvClickable(interaction, cornerRadius = 8.dp) {
+                activity.selectChannel(group.groupIndex, row.channelPos)
+            }
             .padding(horizontal = 20.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -556,10 +567,11 @@ private fun EpgSheet(activity: LivePlayActivity) {
                 val clickable = epg.startdateTime != null && !now.before(epg.startdateTime) &&
                         (canCatchup || (epg.enddateTime != null && !now.after(epg.enddateTime)))
                 val selected = index == activity.currentLiveLookBackIndex
+                val epgRowInteraction = remember { MutableInteractionSource() }
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable(enabled = clickable) {
+                        .tvClickable(epgRowInteraction, cornerRadius = 8.dp, enabled = clickable) {
                             if (activity.onEpgRowClicked(index)) dismissAnimated()
                         }
                         .padding(horizontal = 16.dp, vertical = 10.dp),

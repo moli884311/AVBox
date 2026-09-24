@@ -8,6 +8,7 @@ import android.content.Intent
 import android.widget.Toast
 import com.github.tvbox.osc.ui.theme.enableTransparentEdgeToEdge
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -56,6 +57,7 @@ import com.github.tvbox.osc.ui.components.VodCard
 import com.github.tvbox.osc.ui.components.VodCardMenu
 import com.github.tvbox.osc.ui.components.glassTopBarSurface
 import com.github.tvbox.osc.ui.components.rememberVodCardMenuState
+import com.github.tvbox.osc.ui.tv.tvClickable
 import com.github.tvbox.osc.ui.WindowSize
 import com.github.tvbox.osc.ui.page.PartitionListVM
 import com.github.tvbox.osc.ui.page.dispatchVodCardClick
@@ -248,11 +250,12 @@ private fun BarActionBox(
     tint: Color = MaterialTheme.colorScheme.onSurface,
     onClick: () -> Unit,
 ) {
+    val interaction = remember { MutableInteractionSource() }
     Box(
         modifier = Modifier
             .size(40.dp)
             .glassTopBarSurface(CircleShape, MaterialTheme.colorScheme.surfaceBright)
-            .clickable(onClick = onClick),
+            .tvClickable(interaction, cornerRadius = 20.dp) { onClick() },
         contentAlignment = Alignment.Center,
     ) {
         Icon(

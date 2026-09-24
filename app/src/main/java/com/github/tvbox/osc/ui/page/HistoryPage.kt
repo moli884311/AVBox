@@ -12,7 +12,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -80,6 +80,8 @@ import com.github.tvbox.osc.ui.components.LocalSheetDismiss
 import com.github.tvbox.osc.ui.components.LocalSheetDismissThen
 import com.github.tvbox.osc.ui.components.glassTopBarSurface
 import com.github.tvbox.osc.ui.theme.cardContainer
+import com.github.tvbox.osc.ui.tv.tvClickable
+import com.github.tvbox.osc.ui.tv.tvCombinedClickable
 import com.github.tvbox.osc.util.EpisodeTotals
 import com.github.tvbox.osc.util.HawkConfig
 import com.github.tvbox.osc.util.HistoryHelper
@@ -339,6 +341,7 @@ private fun HistoryRow(
     onLongClick: () -> Unit,
 ) {
     var progressEntered by rememberSaveable { mutableStateOf(false) }
+    val interaction = remember { MutableInteractionSource() }
     Surface(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -347,7 +350,12 @@ private fun HistoryRow(
         Row(
             modifier = Modifier
                 .clip(RoundedCornerShape(16.dp))
-                .combinedClickable(onClick = onClick, onLongClick = onLongClick)
+                .tvCombinedClickable(
+                    interaction,
+                    cornerRadius = 16.dp,
+                    onLongClick = onLongClick,
+                    onClick = onClick,
+                )
                 .padding(horizontal = 12.dp, vertical = 12.dp)
                 .height(IntrinsicSize.Min),
             verticalAlignment = Alignment.CenterVertically,
@@ -473,12 +481,13 @@ internal fun ManageActionIcon(
     onClick: () -> Unit,
     enabled: Boolean = true,
 ) {
+    val interaction = remember { MutableInteractionSource() }
     Box(
         modifier = Modifier
             .alpha(if (enabled) 1f else 0.4f)
             .size(40.dp)
             .glassTopBarSurface(CircleShape, MaterialTheme.colorScheme.surfaceBright)
-            .clickable(enabled = enabled, onClick = onClick),
+            .tvClickable(interaction, cornerRadius = 20.dp, enabled = enabled) { onClick() },
         contentAlignment = Alignment.Center,
     ) {
         Icon(
