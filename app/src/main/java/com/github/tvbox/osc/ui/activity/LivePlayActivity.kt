@@ -8,6 +8,7 @@ import android.graphics.Bitmap
 import android.os.Handler
 import android.os.Looper
 import android.text.TextUtils
+import android.view.KeyEvent
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.viewModels
@@ -190,6 +191,45 @@ class LivePlayActivity : BaseActivity() {
 
     override fun hideSysBar() {
         if (fullScreen) super.hideSysBar()
+    }
+
+    /**
+     * 遥控器按键(仅电视遥控会发出这些 keyCode,手机端无影响)。
+     *
+     * <p>控制层/时移界面打开时不抢方向键,交给 Compose 焦点系统在频道列表与按钮间移动;
+     * 关闭时上/下与频道键切台、OK/MENU 唤出控制层。BACK 交回 OnBackPressedCallback。
+     */
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (event.action == KeyEvent.ACTION_DOWN && handleRemoteKey(event.keyCode)) return true
+        return super.dispatchKeyEvent(event)
+    }
+
+    private fun handleRemoteKey(keyCode: Int): Boolean {
+        // 媒体键无论控制层是否打开都生效
+        when (keyCode) {
+            KeyEvent.KEYCODE_MEDIA_NEXT -> {
+                playNext(); return true
+            }
+            KeyEvent.KEYCODE_MEDIA_PREVIOUS -> {
+                playPrevious(); return true
+            }
+        }
+        if (overlayVisible || isBackState) return false
+        return when (keyCode) {
+            KeyEvent.KEYCODE_CHANNEL_UP, KeyEvent.KEYCODE_DPAD_UP -> {
+                playNext(); true
+            }
+            KeyEvent.KEYCODE_CHANNEL_DOWN, KeyEvent.KEYCODE_DPAD_DOWN -> {
+                playPrevious(); true
+            }
+            KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER,
+            KeyEvent.KEYCODE_NUMPAD_ENTER, KeyEvent.KEYCODE_MENU -> {
+                overlayVisible = true
+                scheduleOverlayHide()
+                true
+            }
+            else -> false
+        }
     }
 
     override fun init() {
