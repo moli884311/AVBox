@@ -22,6 +22,7 @@ import com.github.tvbox.osc.R;
 import com.github.tvbox.osc.ui.WindowSize;
 import com.github.tvbox.osc.util.AppManager;
 import com.github.tvbox.osc.util.LanguageManager;
+import com.github.tvbox.osc.util.ScreenUtils;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -172,6 +173,11 @@ public abstract class BaseActivity extends AppCompatActivity implements CustomAd
     /** 当前窗口档下的策略值;播放器退出全屏时恢复到此值,而不是硬写竖屏 */
     public int orientationPolicyValue() {
         try {
+            // TV 恒横屏:电视盒子常见 densityDpi=320,1080p 折算仅 540dp,
+            // 会被 sw<600 误判成手机而锁竖屏(真机实测:画面竖板居中)
+            if (ScreenUtils.isTv(this)) {
+                return ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
+            }
             Configuration configuration = super.getResources().getConfiguration();
             return WindowSize.shouldLockPortrait(configuration.smallestScreenWidthDp)
                     ? ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT

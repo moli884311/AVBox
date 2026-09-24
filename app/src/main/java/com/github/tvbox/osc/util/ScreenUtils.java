@@ -35,7 +35,12 @@ public class ScreenUtils {
      */
     public static boolean isTv(Context context) {
         UiModeManager uiModeManager = (UiModeManager) context.getSystemService(UI_MODE_SERVICE);
-        return uiModeManager != null
-                && uiModeManager.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION;
+        if (uiModeManager != null
+                && uiModeManager.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION) {
+            return true;
+        }
+        // 部分电视盒子(尤其非认证 Android TV)UI_MODE 报 NORMAL,但会声明 leanback 特性。
+        // 手机不声明该特性,故不会把大屏手机误判成 TV(见上方 2026-09-13 收窄说明)。
+        return context.getPackageManager().hasSystemFeature("android.software.leanback");
     }
 }
