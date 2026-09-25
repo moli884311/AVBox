@@ -50,10 +50,31 @@ val LocalIsTelevision = staticCompositionLocalOf { false }
 
 fun isTelevision(context: Context): Boolean = ScreenUtils.isTv(context)
 
+/**
+ * 进程级"用户确实在用遥控器"闩锁。
+ *
+ * 部分非认证盒子 [ScreenUtils.isTv] 的所有静态判据都不成立:UI_MODE 报 NORMAL、不声明
+ * leanback/television、系统还谎报有触摸屏、遥控器按键也不带 SOURCE_DPAD。此时整套 TV 适配
+ * (焦点描边/初始焦点/按键路由/overscan/播放器 MENU 键)全部静默失效 —— 表现为"卡片能点但
+ * 播放器按 MENU 没反应、返回后焦点乱跑"。但只要用户按过一次方向键,就足以证明这是遥控器场景。
+ *
+ * 触摸设备的软键盘不会产生方向键,故不会把手机误判成 TV。
+ */
+object TvInputMode {
+    var dpadSeen by mutableStateOf(false)
+        private set
+
+    fun onDpadKey() {
+        if (!dpadSeen) dpadSeen = true
+    }
+}
+
 @Composable
 fun rememberIsTelevision(): Boolean {
     val context = LocalContext.current
-    return remember(context) { isTelevision(context) }
+    val deviceIsTv = remember(context) { isTelevision(context) }
+    // 静态判据不成立但用户已在用方向键 ⇒ 动态升级为 TV(见 TvInputMode 说明)
+    return deviceIsTv || TvInputMode.dpadSeen
 }
 
 /** 遥控聚焦时卡片的放大系数(仅 TV 生效)。 */

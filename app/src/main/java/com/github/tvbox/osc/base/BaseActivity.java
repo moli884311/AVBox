@@ -12,6 +12,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Looper;
 import android.util.DisplayMetrics;
+import android.view.KeyEvent;
 import android.view.View;
 
 import androidx.annotation.Nullable;
@@ -20,6 +21,7 @@ import androidx.core.content.PermissionChecker;
 
 import com.github.tvbox.osc.R;
 import com.github.tvbox.osc.ui.WindowSize;
+import com.github.tvbox.osc.ui.tv.TvInputMode;
 import com.github.tvbox.osc.util.AppManager;
 import com.github.tvbox.osc.util.LanguageManager;
 import com.github.tvbox.osc.util.ScreenUtils;
@@ -99,6 +101,25 @@ public abstract class BaseActivity extends AppCompatActivity implements CustomAd
             refreshAutoSize();
             scheduleRefreshAutoSize();
         }
+    }
+
+    /**
+     * 进程级"用户确实在用遥控器"闩锁:方向键/确认键一旦出现就说明是遥控场景。
+     * 部分盒子 {@link ScreenUtils#isTv} 的静态判据全部不成立(不报 TELEVISION/leanback、
+     * 谎报触摸屏),此时靠这里动态补正,否则整套 TV 适配静默失效。
+     */
+    @Override
+    public boolean dispatchKeyEvent(KeyEvent event) {
+        if (event.getAction() == KeyEvent.ACTION_DOWN) {
+            int code = event.getKeyCode();
+            if (code == KeyEvent.KEYCODE_DPAD_UP || code == KeyEvent.KEYCODE_DPAD_DOWN
+                    || code == KeyEvent.KEYCODE_DPAD_LEFT || code == KeyEvent.KEYCODE_DPAD_RIGHT
+                    || code == KeyEvent.KEYCODE_DPAD_CENTER || code == KeyEvent.KEYCODE_ENTER
+                    || code == KeyEvent.KEYCODE_NUMPAD_ENTER) {
+                TvInputMode.INSTANCE.onDpadKey();
+            }
+        }
+        return super.dispatchKeyEvent(event);
     }
 
     public void hideSysBar() {

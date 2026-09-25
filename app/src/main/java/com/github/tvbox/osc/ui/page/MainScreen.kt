@@ -97,6 +97,7 @@ import com.github.tvbox.osc.util.HawkConfig
 import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.github.tvbox.osc.util.KV
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 private enum class AppTab(@StringRes val labelRes: Int, @DrawableRes val icon: Int) {
@@ -225,6 +226,22 @@ private fun MainContent() {
     val layoutDirection = LocalLayoutDirection.current
     // TV 布局判据(横屏侧栏 + 按键路由 + overscan 共用,只取一次)
     val isTvLayout = rememberIsTelevision()
+
+    // TV:从详情/播放/搜索等子页面返回时,Compose 焦点树已被清空,方向键会在"无焦点"状态下
+    // 触发一次几何搜索 —— 结果通常是落在左侧导航栏(用户实测:返回后按↓跳到"历史")。
+    // 这里在每次 ON_RESUME 主动把焦点拉回内容区;失败(首帧未测量/requester 未 attach)按帧重试。
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        if (!isTvLayout) return@LifecycleEventEffect
+        scope.launch {
+            repeat(20) {
+                withFrameNanos { }
+                if (runCatching { contentFocusRequester.requestFocus() }.getOrDefault(false)) {
+                    return@launch
+                }
+                delay(50)
+            }
+        }
+    }
 
     // 导航形态:Compact 用底部横条,Medium/Expanded 用侧边竖条(判据集中在 NavMetrics,见 spec §4.11)
     val navAxis = NavMetrics.axisFor(currentWindowWidthClass())

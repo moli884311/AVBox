@@ -327,7 +327,14 @@ fun HomePage(vm: HomeViewModel, contentPadding: PaddingValues = PaddingValues(0.
         }
         }
 
-        if (sources.isNotEmpty() && homeLayout == HomeSettings.HomeLayout.Horizontal) {
+        // 只在真的下拉时才画指示器。原实现无条件渲染:自定义内容里放了一个
+        // ContainedLoadingIndicator(progress = distanceFraction),静止(distanceFraction=0)时
+        // 它仍画出完整的加载星标 ⇒ 首页正中永远挂着一个"加载图标"(TV 上尤其显眼)。
+        // 手机上因指示器贴着顶栏不易察觉,TV 的横版首页正好落在卡片区中央。
+        if (sources.isNotEmpty() &&
+            homeLayout == HomeSettings.HomeLayout.Horizontal &&
+            pullState.distanceFraction > 0f
+        ) {
             HomePullRefreshIndicator(
                 state = pullState,
                 isRefreshing = false,
