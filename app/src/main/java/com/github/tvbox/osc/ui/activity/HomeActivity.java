@@ -86,7 +86,7 @@ import me.jessyan.autosize.utils.AutoSizeUtils;
 
 public class HomeActivity extends BaseActivity {
     private LinearLayout topLayout;
-    private LinearLayout contentLayout;
+    private View contentLayout;
     private TextView tvDate;
     private TextView tvName;
     private ImageView heroBackdrop;
