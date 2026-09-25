@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginBottom="@dimen/vs_10"
-    android:background="@drawable/shape_setting_sort_focus"
+    android:background="@drawable/sel_rail_item"
     android:focusable="true"
     android:focusableInTouchMode="true">
 
@@ -12,8 +12,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:padding="@dimen/vs_5"
+        android:padding="@dimen/vs_10"
         android:singleLine="true"
-        android:textColor="@color/color_CCFFFFFF"
+        android:textColor="@color/rail_item_text"
         android:textSize="@dimen/ts_24" />
 </FrameLayout>
