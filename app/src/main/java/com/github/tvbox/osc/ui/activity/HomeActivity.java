@@ -62,6 +62,7 @@ import com.github.tvbox.osc.util.HawkConfig;
 import com.github.tvbox.osc.util.ImgUtil;
 import com.github.tvbox.osc.util.LOG;
 import com.github.tvbox.osc.util.MD5;
+import com.github.tvbox.osc.util.TmdbHelper;
 import com.github.tvbox.osc.viewmodel.SourceViewModel;
 import com.orhanobut.hawk.Hawk;
 import com.owen.tvrecyclerview.widget.TvRecyclerView;
@@ -93,6 +94,7 @@ public class HomeActivity extends BaseActivity {
     private TextView tvHeroTitle;
     private TextView tvHeroMeta;
     private TextView tvHeroDesc;
+    private String heroTmdbKey = "";
     private HomeRecFragment homeRecFragment;
     private TvRecyclerView mGridView;
     private NoScrollViewPager mViewPager;
@@ -253,7 +255,7 @@ public class HomeActivity extends BaseActivity {
             @Override
             public void onClick(View v) {
                 FastClickCheckUtil.check(v);
-                cleanSpiderCache();
+                showSiteSwitch();
             }
         });
         tvName.setOnLongClickListener(new View.OnLongClickListener() {
@@ -269,7 +271,7 @@ public class HomeActivity extends BaseActivity {
                 @Override
                 public void onClick(View v) {
                     FastClickCheckUtil.check(v);
-                    showSiteSwitch();
+                    cleanSpiderCache();
                 }
             });
         }
@@ -957,6 +959,50 @@ public class HomeActivity extends BaseActivity {
                 ImgUtil.load(pic, heroBackdrop, AutoSizeUtils.mm2px(this, 1), 0, 0, video.name);
             }
         }
+        applyTmdbMeta(video);
+    }
+
+    private void applyTmdbMeta(final Movie.Video video) {
+        if (!TmdbHelper.isEnabled() || video == null) return;
+        final String localPic = video.pic == null ? "" : video.pic.trim();
+        final String requestKey = (video.name == null ? "" : video.name) + "#" + video.year;
+        heroTmdbKey = requestKey;
+        TmdbHelper.loadMeta(video.name, video.year, new TmdbHelper.Callback() {
+            @Override
+            public void onResult(final TmdbHelper.Meta meta) {
+                if (meta == null || isActivityUnavailable()) return;
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (isActivityUnavailable() || !requestKey.equals(heroTmdbKey)) return;
+                        boolean enhanced = TmdbHelper.getEnhanced();
+                        if (enhanced && tmdbBackdropUsable(meta, localPic) && heroBackdrop != null) {
+                            ImgUtil.load(meta.backdrop, heroBackdrop, AutoSizeUtils.mm2px(HomeActivity.this, 1), 0, 0, video.name);
+                        }
+                        if (tvHeroDesc != null && enhanced && !TextUtils.isEmpty(meta.overview)) {
+                            tvHeroDesc.setText(meta.overview);
+                        }
+                        if (tvHeroMeta != null && enhanced
+                                && (!TextUtils.isEmpty(meta.director) || !TextUtils.isEmpty(meta.actors))) {
+                            StringBuilder wrapper = new StringBuilder();
+                            if (!TextUtils.isEmpty(meta.director)) {
+                                wrapper.append("导演：").append(meta.director);
+                            }
+                            if (!TextUtils.isEmpty(meta.actors)) {
+                                if (wrapper.length() > 0) wrapper.append("    ");
+                                wrapper.append("主演：").append(meta.actors);
+                            }
+                            tvHeroMeta.setText(wrapper.toString());
+                        }
+                    }
+                });
+            }
+        });
+    }
+
+    private boolean tmdbBackdropUsable(TmdbHelper.Meta meta, String localPic) {
+        if (meta == null || TextUtils.isEmpty(meta.backdrop)) return false;
+        return !TmdbHelper.isKeepSize() || TextUtils.isEmpty(localPic);
     }
 
     private void refreshHome(final boolean restart)

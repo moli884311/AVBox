@@ -66,5 +66,10 @@ public class HawkConfig {
     public static final String DANMU_SIZE_SCALE = "danmu_size_scale";
     public static final String DANMU_RANDOM_COLOR = "danmu_random_color";
     public static final String DANMU_API = "danmu_api";
+    public static final String TMDB_TOKEN = "tmdb_token";
+    public static final String TMDB_API_KEY = "tmdb_api_key";
+    public static final String TMDB_MATCH = "tmdb_match"; // 0 智能 1 精确 2 关闭
+    public static final String TMDB_DETAIL = "tmdb_detail"; // 0 影视原生 1 TMDB 增强
+    public static final String TMDB_KEEP_SIZE = "tmdb_keep_size";
     public static boolean hotVodDelete;
 }

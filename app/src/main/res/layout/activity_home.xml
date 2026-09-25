@@ -11,7 +11,7 @@
     <ImageView
         android:id="@+id/heroBackdrop"
         android:layout_width="match_parent"
-        android:layout_height="@dimen/vs_400"
+        android:layout_height="match_parent"
         android:scaleType="centerCrop"
         android:focusable="false"
         android:focusableInTouchMode="false"
@@ -20,7 +20,7 @@
     <View
         android:id="@+id/heroScrim"
         android:layout_width="match_parent"
-        android:layout_height="@dimen/vs_400"
+        android:layout_height="match_parent"
         android:background="@drawable/bg_hero_scrim"
         android:focusable="false"
         android:focusableInTouchMode="false" />

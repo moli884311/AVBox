@@ -122,6 +122,12 @@
                     android:layout_height="wrap_content" />
 
                 <include
+                    android:id="@+id/rowTmdb"
+                    layout="@layout/item_setting_row"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+                <include
                     android:id="@+id/rowPrefer"
                     layout="@layout/item_setting_row"
                     android:layout_width="match_parent"

@@ -18,6 +18,7 @@ import com.github.tvbox.osc.util.FocusTouchHelper;
 import com.github.tvbox.osc.util.HawkConfig;
 import com.github.tvbox.osc.util.HistoryHelper;
 import com.github.tvbox.osc.util.OkGoHelper;
+import com.github.tvbox.osc.util.TmdbHelper;
 import com.orhanobut.hawk.Hawk;
 
 /**
@@ -53,6 +54,7 @@ public class SettingActivity extends BaseActivity {
         bindRow(R.id.rowTheme, R.drawable.ic_settings_theme, "主题设置", "修改应用的配色和效果", null, "theme");
         bindRow(R.id.rowPlay, R.drawable.ic_settings_play, "播放设置", "播放内核和解码方式", null, "play");
         bindRow(R.id.rowDanmu, R.drawable.ic_settings_danmu, "弹幕设置", "弹幕开关、来源与外观", null, "danmu");
+        bindRow(R.id.rowTmdb, R.drawable.ic_settings_api, "TMDB 设置", "海报、简介与演职员信息", null, "tmdb");
         bindRow(R.id.rowPrefer, R.drawable.ic_settings_preference, "偏好设置", "修改应用的使用偏好", null, "prefer");
         bindRow(R.id.rowPreload, R.drawable.ic_settings_preload, "预载设置", "播放视频时预加载", null, "preload");
         bindRow(R.id.rowDefaultPage, R.drawable.ic_settings_start, "默认启动页", "首次打开应用的所在位置", null, "start");
@@ -128,6 +130,7 @@ public class SettingActivity extends BaseActivity {
         setRowValue(R.id.rowHistory, HistoryHelper.getHistoryNumName(Hawk.get(HawkConfig.HISTORY_NUM, 0)));
         setRowValue(R.id.rowDoh, OkGoHelper.dnsHttpsList.get(Hawk.get(HawkConfig.DOH_URL, 0)));
         setRowValue(R.id.rowDebug, Hawk.get(HawkConfig.DEBUG_OPEN, false) ? "已打开" : "已关闭");
+        setRowValue(R.id.rowTmdb, TmdbHelper.isEnabled() ? "已开启" : "未开启");
     }
 
     private Runnable mDevModeRun = new Runnable() {

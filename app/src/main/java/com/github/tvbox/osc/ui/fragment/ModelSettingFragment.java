@@ -35,6 +35,7 @@ import com.github.tvbox.osc.ui.dialog.ApiHistoryDialog;
 import com.github.tvbox.osc.ui.dialog.BackupDialog;
 import com.github.tvbox.osc.ui.dialog.DanmuApiDialog;
 import com.github.tvbox.osc.ui.dialog.SearchRemoteTvDialog;
+import com.github.tvbox.osc.ui.dialog.TmdbConfigDialog;
 import com.github.tvbox.osc.ui.dialog.SelectDialog;
 import com.github.tvbox.osc.ui.dialog.XWalkInitDialog;
 import com.github.tvbox.osc.util.DanmuHelper;
@@ -46,6 +47,7 @@ import com.github.tvbox.osc.util.HistoryHelper;
 import com.github.tvbox.osc.util.LOG;
 import com.github.tvbox.osc.util.OkGoHelper;
 import com.github.tvbox.osc.util.PlayerHelper;
+import com.github.tvbox.osc.util.TmdbHelper;
 import com.github.tvbox.osc.viewmodel.SourceViewModel;
 import com.lzy.okgo.OkGo;
 import com.lzy.okgo.callback.FileCallback;
@@ -824,6 +826,7 @@ public class ModelSettingFragment extends BaseLazyFragment {
         findViewById(R.id.llIjkCachePlay).setOnClickListener((view -> onClickIjkCachePlay(view)));
         findViewById(R.id.llClearCache).setOnClickListener((view -> onClickClearCache(view)));
         bindDanmuExtra();
+        bindTmdbExtra();
         applyCategoryFilter();
         FocusTouchHelper.install(rootView);
     }
@@ -934,6 +937,83 @@ public class ModelSettingFragment extends BaseLazyFragment {
                 tvRandom.setText(random ? "开启" : "关闭");
             }
         });
+    }
+
+    private void bindTmdbExtra() {
+        final TextView tvConfig = findViewById(R.id.tvTmdbConfig);
+        final TextView tvMatch = findViewById(R.id.tvTmdbMatch);
+        final TextView tvDetail = findViewById(R.id.tvTmdbDetail);
+        final TextView tvKeepSize = findViewById(R.id.tvTmdbKeepSize);
+        if (tvConfig == null) return;
+        tvConfig.setText(TmdbHelper.isEnabled() ? "已开启" : "未开启");
+        tvMatch.setText(matchModeName(TmdbHelper.getMatchMode()));
+        tvDetail.setText(TmdbHelper.getDetailMode() == 1 ? "TMDB增强" : "影视原生");
+        tvKeepSize.setText(TmdbHelper.isKeepSize() ? "开启" : "关闭");
+        findViewById(R.id.llTmdbConfig).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                FastClickCheckUtil.check(v);
+                TmdbConfigDialog dialog = new TmdbConfigDialog(mActivity);
+                dialog.setOnListener(new TmdbConfigDialog.OnListener() {
+                    @Override
+                    public void onChange(String token) {
+                        tvConfig.setText(TmdbHelper.isEnabled() ? "已开启" : "未开启");
+                    }
+                });
+                dialog.show();
+            }
+        });
+        findViewById(R.id.llTmdbMatch).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                FastClickCheckUtil.check(v);
+                final String[] values = new String[]{"智能匹配", "精确匹配", "关闭"};
+                showStringSelectDialog("匹配模式", values, TmdbHelper.getMatchMode(), new OnStringSelectListener() {
+                    @Override
+                    public void onSelect(String value) {
+                        int mode = 0;
+                        for (int i = 0; i < values.length; i++) {
+                            if (values[i].equals(value)) {
+                                mode = i;
+                                break;
+                            }
+                        }
+                        Hawk.put(HawkConfig.TMDB_MATCH, mode);
+                        tvMatch.setText(matchModeName(mode));
+                    }
+                });
+            }
+        });
+        findViewById(R.id.llTmdbDetail).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                FastClickCheckUtil.check(v);
+                final String[] values = new String[]{"影视原生", "TMDB增强"};
+                showStringSelectDialog("详情模式", values, TmdbHelper.getDetailMode(), new OnStringSelectListener() {
+                    @Override
+                    public void onSelect(String value) {
+                        int mode = values[0].equals(value) ? 0 : 1;
+                        Hawk.put(HawkConfig.TMDB_DETAIL, mode);
+                        tvDetail.setText(value);
+                    }
+                });
+            }
+        });
+        findViewById(R.id.llTmdbKeepSize).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                FastClickCheckUtil.check(v);
+                boolean keep = !TmdbHelper.isKeepSize();
+                Hawk.put(HawkConfig.TMDB_KEEP_SIZE, keep);
+                tvKeepSize.setText(keep ? "开启" : "关闭");
+            }
+        });
+    }
+
+    private String matchModeName(int mode) {
+        if (mode == 1) return "精确匹配";
+        if (mode == 2) return "关闭";
+        return "智能匹配";
     }
 
     private interface OnStringSelectListener {
