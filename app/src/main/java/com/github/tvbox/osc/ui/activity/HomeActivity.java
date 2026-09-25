@@ -176,7 +176,7 @@ public class HomeActivity extends BaseActivity {
         this.mGridView = findViewById(R.id.mGridView);
         this.mViewPager = findViewById(R.id.mViewPager);
         this.sortAdapter = new SortAdapter();
-        this.mGridView.setLayoutManager(new V7LinearLayoutManager(this.mContext, 0, false));
+        this.mGridView.setLayoutManager(new V7LinearLayoutManager(this.mContext, 1, false));
         this.mGridView.setSpacingWithMargins(0, AutoSizeUtils.dp2px(this.mContext, 10.0f));
         this.mGridView.setAdapter(this.sortAdapter);
         sortAdapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {

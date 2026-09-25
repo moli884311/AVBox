@@ -53,4 +53,22 @@
 
 
 
+
+    <!-- 归零box 品牌与液态玻璃配色 -->
+    <color name="ic_launcher_background">#FFFFFFFF</color>
+    <color name="window_background">#F3EDF7</color>
+    <color name="brand_seed">#1B6EF3</color>
+    <color name="brand_accent">#5B9BFF</color>
+
+    <color name="glass_tint">#2EFFFFFF</color>
+    <color name="glass_tint_strong">#47FFFFFF</color>
+    <color name="glass_stroke">#3DFFFFFF</color>
+    <color name="glass_highlight">#59FFFFFF</color>
+    <color name="glass_shadow">#4A000000</color>
+    <color name="glass_scrim">#66101420</color>
+
+    <color name="home_bg_top">#101B33</color>
+    <color name="home_bg_mid">#16233F</color>
+    <color name="home_bg_bottom">#0A0F1A</color>
+    <color name="home_bg_glow">#332E6BE6</color>
 </resources>
