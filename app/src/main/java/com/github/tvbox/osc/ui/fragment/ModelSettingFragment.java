@@ -102,9 +102,18 @@ public class ModelSettingFragment extends BaseLazyFragment {
     private boolean selectLocalLive;
     private TextView tvDanmuOpenText;
     private TextView tvDanmuApiText;
+    private String category = "";
 
     public static ModelSettingFragment newInstance() {
         return new ModelSettingFragment().setArguments();
+    }
+
+    public static ModelSettingFragment newInstance(String category) {
+        ModelSettingFragment fragment = new ModelSettingFragment();
+        Bundle bundle = new Bundle();
+        bundle.putString("category", category);
+        fragment.setArguments(bundle);
+        return fragment;
     }
 
     public ModelSettingFragment setArguments() {
@@ -118,6 +127,9 @@ public class ModelSettingFragment extends BaseLazyFragment {
 
     @Override
     protected void init() {
+        if (getArguments() != null && getArguments().getString("category") != null) {
+            category = getArguments().getString("category");
+        }
         tvFastSearchText = findViewById(R.id.showFastSearchText);
         tvFastSearchText.setText(Hawk.get(HawkConfig.FAST_SEARCH_MODE, true) ? "开启" : "关闭");
         tvm3u8AdText = findViewById(R.id.m3u8AdText);
@@ -810,6 +822,164 @@ public class ModelSettingFragment extends BaseLazyFragment {
 
         findViewById(R.id.llIjkCachePlay).setOnClickListener((view -> onClickIjkCachePlay(view)));
         findViewById(R.id.llClearCache).setOnClickListener((view -> onClickClearCache(view)));
+        bindDanmuExtra();
+        applyCategoryFilter();
+    }
+
+    private void bindDanmuExtra() {
+        final TextView tvLine = findViewById(R.id.tvDanmuLine);
+        final TextView tvSpeed = findViewById(R.id.tvDanmuSpeed);
+        final TextView tvAlpha = findViewById(R.id.tvDanmuAlpha);
+        final TextView tvScale = findViewById(R.id.tvDanmuScale);
+        final TextView tvRandom = findViewById(R.id.tvDanmuRandom);
+        if (tvLine == null) return;
+        tvLine.setText(DanmuHelper.getMaxLine() + " 行");
+        tvSpeed.setText(DanmuHelper.getSpeed() + "x");
+        tvAlpha.setText(Math.round(DanmuHelper.getAlpha() * 100) + "%");
+        tvScale.setText(DanmuHelper.getSizeScale() + "x");
+        tvRandom.setText(DanmuHelper.useRandomColor() ? "开启" : "关闭");
+        findViewById(R.id.llDanmuLine).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                FastClickCheckUtil.check(v);
+                final String[] values = new String[]{"1", "2", "3", "4", "5", "6", "8", "10", "12", "15"};
+                int select = 2;
+                for (int i = 0; i < values.length; i++) {
+                    if (Integer.parseInt(values[i]) == DanmuHelper.getMaxLine()) {
+                        select = i;
+                        break;
+                    }
+                }
+                showStringSelectDialog("弹幕行数", values, select, new OnStringSelectListener() {
+                    @Override
+                    public void onSelect(String value) {
+                        DanmuHelper.setMaxLine(Integer.parseInt(value));
+                        tvLine.setText(DanmuHelper.getMaxLine() + " 行");
+                    }
+                });
+            }
+        });
+        findViewById(R.id.llDanmuSpeed).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                FastClickCheckUtil.check(v);
+                final String[] values = new String[]{"0.5", "0.8", "1.0", "1.2", "1.5", "2.0", "2.5", "3.0"};
+                int select = 4;
+                for (int i = 0; i < values.length; i++) {
+                    if (Float.parseFloat(values[i]) == DanmuHelper.getSpeed()) {
+                        select = i;
+                        break;
+                    }
+                }
+                showStringSelectDialog("弹幕速度", values, select, new OnStringSelectListener() {
+                    @Override
+                    public void onSelect(String value) {
+                        DanmuHelper.setSpeed(Float.parseFloat(value));
+                        tvSpeed.setText(DanmuHelper.getSpeed() + "x");
+                    }
+                });
+            }
+        });
+        findViewById(R.id.llDanmuAlpha).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                FastClickCheckUtil.check(v);
+                final String[] values = new String[]{"30%", "50%", "70%", "80%", "90%", "100%"};
+                final float[] floats = new float[]{0.3f, 0.5f, 0.7f, 0.8f, 0.9f, 1.0f};
+                int select = 4;
+                for (int i = 0; i < floats.length; i++) {
+                    if (Math.abs(floats[i] - DanmuHelper.getAlpha()) < 0.01f) {
+                        select = i;
+                        break;
+                    }
+                }
+                showStringSelectDialog("弹幕透明度", values, select, new OnStringSelectListener() {
+                    @Override
+                    public void onSelect(String value) {
+                        DanmuHelper.setAlpha(Float.parseFloat(value.replace("%", "")) / 100f);
+                        tvAlpha.setText(Math.round(DanmuHelper.getAlpha() * 100) + "%");
+                    }
+                });
+            }
+        });
+        findViewById(R.id.llDanmuScale).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                FastClickCheckUtil.check(v);
+                final String[] values = new String[]{"0.6", "0.8", "1.0", "1.2", "1.5", "2.0"};
+                int select = 1;
+                for (int i = 0; i < values.length; i++) {
+                    if (Float.parseFloat(values[i]) == DanmuHelper.getSizeScale()) {
+                        select = i;
+                        break;
+                    }
+                }
+                showStringSelectDialog("弹幕字号", values, select, new OnStringSelectListener() {
+                    @Override
+                    public void onSelect(String value) {
+                        DanmuHelper.setSizeScale(Float.parseFloat(value));
+                        tvScale.setText(DanmuHelper.getSizeScale() + "x");
+                    }
+                });
+            }
+        });
+        findViewById(R.id.llDanmuRandom).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                FastClickCheckUtil.check(v);
+                boolean random = !DanmuHelper.useRandomColor();
+                DanmuHelper.setRandomColor(random);
+                tvRandom.setText(random ? "开启" : "关闭");
+            }
+        });
+    }
+
+    private interface OnStringSelectListener {
+        void onSelect(String value);
+    }
+
+    private void showStringSelectDialog(String tip, final String[] values, int select,
+                                        final OnStringSelectListener listener) {
+        final java.util.List<String> data = new java.util.ArrayList<>();
+        java.util.Collections.addAll(data, values);
+        SelectDialog<String> dialog = new SelectDialog<>(mActivity);
+        dialog.setTip(tip);
+        dialog.setAdapter(new SelectDialogAdapter.SelectDialogInterface<String>() {
+            @Override
+            public void click(String value, int pos) {
+                dialog.dismiss();
+                listener.onSelect(value);
+            }
+
+            @Override
+            public String getDisplay(String val) {
+                return val;
+            }
+        }, new DiffUtil.ItemCallback<String>() {
+            @Override
+            public boolean areItemsTheSame(@NonNull @NotNull String oldItem, @NonNull @NotNull String newItem) {
+                return oldItem.equals(newItem);
+            }
+
+            @Override
+            public boolean areContentsTheSame(@NonNull @NotNull String oldItem, @NonNull @NotNull String newItem) {
+                return oldItem.equals(newItem);
+            }
+        }, data, select);
+        dialog.show();
+    }
+
+    private void applyCategoryFilter() {
+        if (category == null || category.isEmpty()) return;
+        View container = findViewById(R.id.settingGroupContainer);
+        if (!(container instanceof android.view.ViewGroup)) return;
+        android.view.ViewGroup group = (android.view.ViewGroup) container;
+        int targetId = getResources().getIdentifier("settingGroup_" + category, "id", mContext.getPackageName());
+        if (targetId == 0) return;
+        for (int i = 0; i < group.getChildCount(); i++) {
+            View child = group.getChildAt(i);
+            child.setVisibility(child.getId() == targetId ? View.VISIBLE : View.GONE);
+        }
     }
 
     private void restartAppAfterConfigChanged() {
