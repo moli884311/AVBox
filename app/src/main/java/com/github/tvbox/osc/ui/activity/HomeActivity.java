@@ -975,7 +975,7 @@ public class HomeActivity extends BaseActivity {
                     @Override
                     public void run() {
                         if (isActivityUnavailable() || !requestKey.equals(heroTmdbKey)) return;
-                        boolean enhanced = TmdbHelper.getEnhanced();
+                        boolean enhanced = TmdbHelper.isEnhanced();
                         if (enhanced && tmdbBackdropUsable(meta, localPic) && heroBackdrop != null) {
                             ImgUtil.load(meta.backdrop, heroBackdrop, AutoSizeUtils.mm2px(HomeActivity.this, 1), 0, 0, video.name);
                         }
