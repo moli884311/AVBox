@@ -86,4 +86,5 @@
     <color name="cinema_nav_focus_bg">#33E23B2E</color>
     <color name="cinema_scrim">#F20A0F1A</color>
     <color name="cinema_scrim_side">#B3000000</color>
+    <color name="filter_scrim">#B3000000</color>
 </resources>

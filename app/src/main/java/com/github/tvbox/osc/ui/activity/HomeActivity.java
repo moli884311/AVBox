@@ -919,20 +919,28 @@ public class HomeActivity extends BaseActivity {
         }
         if (tvHeroMeta != null) {
             StringBuilder meta = new StringBuilder();
+            if (!TextUtils.isEmpty(video.director)) {
+                meta.append("导演：").append(video.director);
+            }
+            if (!TextUtils.isEmpty(video.actor)) {
+                if (meta.length() > 0) meta.append("    ");
+                meta.append("主演：").append(video.actor);
+            }
+            StringBuilder info = new StringBuilder();
             if (video.year > 0) {
-                meta.append(video.year);
+                info.append(video.year);
             }
             if (!TextUtils.isEmpty(video.type)) {
-                if (meta.length() > 0) meta.append(" · ");
-                meta.append(video.type);
+                if (info.length() > 0) info.append(" · ");
+                info.append(video.type);
             }
             if (!TextUtils.isEmpty(video.area)) {
-                if (meta.length() > 0) meta.append(" · ");
-                meta.append(video.area);
+                if (info.length() > 0) info.append(" · ");
+                info.append(video.area);
             }
-            if (!TextUtils.isEmpty(video.note)) {
-                if (meta.length() > 0) meta.append(" · ");
-                meta.append(video.note);
+            if (info.length() > 0) {
+                if (meta.length() > 0) meta.append("    ");
+                meta.append(info);
             }
             tvHeroMeta.setText(meta.toString());
         }

@@ -3,8 +3,12 @@ package com.github.tvbox.osc.ui.adapter;
 import android.text.TextUtils;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewParent;
 import android.widget.ImageView;
 import android.widget.TextView;
+
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.chad.library.adapter.base.BaseViewHolder;
@@ -95,18 +99,57 @@ public class GridAdapter extends BaseQuickAdapter<Movie.Video, BaseViewHolder> {
         } else {
             ivThumb.setImageDrawable(ImgUtil.createTextDrawable(item.name));
         }
-        applyStyleToImage(ivThumb);
+        applyStyleToImage(helper, ivThumb);
     }
 
-    private void applyStyleToImage(final ImageView ivThumb) {
-        if (style != null && !mCompactRow) {
-            ViewGroup container = (ViewGroup) ivThumb.getParent();
-            int width = defaultWidth;
-            int height = (int) (width / style.ratio);
-            ViewGroup.LayoutParams containerParams = container.getLayoutParams();
-            containerParams.height = AutoSizeUtils.mm2px(mContext, height);
-            containerParams.width = AutoSizeUtils.mm2px(mContext, width);
-            container.setLayoutParams(containerParams);
+    private void applyStyleToImage(BaseViewHolder helper, final ImageView ivThumb) {
+        float ratio;
+        int baseWidth;
+        if (mCompactRow) {
+            ratio = 150f / 200f;
+            baseWidth = 140;
+        } else if (style != null) {
+            ratio = style.ratio <= 0f ? ((float) ImgUtil.defaultWidth / ImgUtil.defaultHeight) : style.ratio;
+            baseWidth = defaultWidth;
+        } else {
+            ratio = (float) ImgUtil.defaultWidth / ImgUtil.defaultHeight;
+            baseWidth = 214;
         }
+        int width = fitToGrid(ivThumb, baseWidth);
+        int height = Math.max(1, (int) (width / ratio));
+        ViewGroup container = (ViewGroup) ivThumb.getParent();
+        ViewGroup.LayoutParams containerParams = container.getLayoutParams();
+        containerParams.width = width;
+        containerParams.height = height;
+        container.setLayoutParams(containerParams);
+        if (mCompactRow) {
+            View name = helper.getView(R.id.tvName);
+            if (name != null && name.getLayoutParams() != null) {
+                name.getLayoutParams().width = width;
+                name.requestLayout();
+            }
+        }
+    }
+
+    private int fitToGrid(View child, int fallbackWidth) {
+        int width = AutoSizeUtils.mm2px(mContext, fallbackWidth);
+        View current = child;
+        RecyclerView recyclerView = null;
+        while (current != null) {
+            if (current instanceof RecyclerView) {
+                recyclerView = (RecyclerView) current;
+                break;
+            }
+            ViewParent parent = current.getParent();
+            current = parent instanceof View ? (View) parent : null;
+        }
+        if (recyclerView != null && recyclerView.getLayoutManager() instanceof GridLayoutManager) {
+            int spanCount = ((GridLayoutManager) recyclerView.getLayoutManager()).getSpanCount();
+            int available = recyclerView.getWidth() - recyclerView.getPaddingLeft() - recyclerView.getPaddingRight();
+            if (spanCount > 0 && available > 0) {
+                width = Math.min(width, available / spanCount);
+            }
+        }
+        return Math.max(1, width);
     }
 }
