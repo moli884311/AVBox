@@ -193,7 +193,7 @@ public class HomeActivity extends BaseActivity {
         initTopNav();
         this.sortAdapter = new SortAdapter();
         this.mGridView.setLayoutManager(new V7LinearLayoutManager(this.mContext, V7LinearLayoutManager.HORIZONTAL, false));
-        this.mGridView.setSpacingWithMargins(AutoSizeUtils.mm2px(this.mContext, 10.0f), 0);
+        this.mGridView.setSpacingWithMargins(0, AutoSizeUtils.mm2px(this.mContext, 20.0f));
         this.mGridView.setAdapter(this.sortAdapter);
         sortAdapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
             @Override
@@ -583,6 +583,7 @@ public class HomeActivity extends BaseActivity {
         homeRecFragment = null;
         if (pageAdapter != null) {
             mViewPager.setAdapter(null);
+            mViewPager.removeAllViews();
             pageAdapter.removeAll();
             pageAdapter = null;
         } else if (!fragments.isEmpty()) {

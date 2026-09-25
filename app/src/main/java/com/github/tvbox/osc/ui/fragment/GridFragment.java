@@ -190,7 +190,11 @@ public class GridFragment extends BaseLazyFragment {
             mGridView = findViewById(R.id.mGridView);
         }else{ // 复制当前view
             TvRecyclerView v3 = new TvRecyclerView(this.mContext);
-            v3.setSpacingWithMargins(AutoSizeUtils.mm2px(mContext, 20.0f), AutoSizeUtils.mm2px(mContext, 20.0f));
+            if (rowMode) {
+                v3.setSpacingWithMargins(0, AutoSizeUtils.mm2px(mContext, 20.0f));
+            } else {
+                v3.setSpacingWithMargins(AutoSizeUtils.mm2px(mContext, 20.0f), AutoSizeUtils.mm2px(mContext, 20.0f));
+            }
             v3.setLayoutParams(mGridView.getLayoutParams());
             v3.setPadding(mGridView.getPaddingLeft(), mGridView.getPaddingTop(), mGridView.getPaddingRight(), mGridView.getPaddingBottom());
             v3.setClipToPadding(mGridView.getClipToPadding());
@@ -211,7 +215,7 @@ public class GridFragment extends BaseLazyFragment {
         this.createView();
         if (rowMode) {
             mGridView.setLayoutManager(new V7LinearLayoutManager(mContext, V7LinearLayoutManager.HORIZONTAL, false));
-            mGridView.setSpacingWithMargins(AutoSizeUtils.mm2px(mContext, 10.0f), 0);
+            mGridView.setSpacingWithMargins(0, AutoSizeUtils.mm2px(mContext, 20.0f));
         } else if(isFolederMode()){
             mGridView.setLayoutManager(new V7LinearLayoutManager(this.mContext, 1, false));
         }else{
