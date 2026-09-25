@@ -71,4 +71,19 @@
     <color name="home_bg_mid">#16233F</color>
     <color name="home_bg_bottom">#0A0F1A</color>
     <color name="home_bg_glow">#332E6BE6</color>
+
+    <!-- 首页 OTT 影视大厅(电影感 红/金/暗色) -->
+    <color name="cinema_bg_top">#0B0E15</color>
+    <color name="cinema_bg_mid">#12161F</color>
+    <color name="cinema_bg_bottom">#05070B</color>
+    <color name="cinema_red">#E23B2E</color>
+    <color name="cinema_red_dark">#8C1F17</color>
+    <color name="cinema_gold">#E8B34B</color>
+    <color name="cinema_text_primary">#F5F0E6</color>
+    <color name="cinema_text_secondary">#B8B2A6</color>
+    <color name="cinema_chip_bg">#1FFFFFFF</color>
+    <color name="cinema_chip_stroke">#33FFFFFF</color>
+    <color name="cinema_nav_focus_bg">#33E23B2E</color>
+    <color name="cinema_scrim">#F20A0F1A</color>
+    <color name="cinema_scrim_side">#B3000000</color>
 </resources>

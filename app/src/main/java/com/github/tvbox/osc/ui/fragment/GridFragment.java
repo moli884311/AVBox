@@ -26,6 +26,7 @@ import com.github.tvbox.osc.bean.MovieSort;
 import com.github.tvbox.osc.event.RefreshEvent;
 import com.github.tvbox.osc.ui.activity.DetailActivity;
 import com.github.tvbox.osc.ui.activity.FastSearchActivity;
+import com.github.tvbox.osc.ui.activity.HomeActivity;
 import com.github.tvbox.osc.ui.activity.SearchActivity;
 import com.github.tvbox.osc.ui.adapter.GridAdapter;
 import com.github.tvbox.osc.ui.adapter.GridFilterKVAdapter;
@@ -40,6 +41,8 @@ import com.orhanobut.hawk.Hawk;
 import com.owen.tvrecyclerview.widget.TvRecyclerView;
 import com.owen.tvrecyclerview.widget.V7GridLayoutManager;
 import com.owen.tvrecyclerview.widget.V7LinearLayoutManager;
+
+import me.jessyan.autosize.utils.AutoSizeUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -77,6 +80,7 @@ public class GridFragment extends BaseLazyFragment {
     private boolean pullRefreshReady = false;
     private int pullRefreshThreshold = 0;
     private View loadSirView = null;
+    private boolean rowMode = false;
 
     private static class GridInfo{
         public String sortID="";
@@ -92,6 +96,12 @@ public class GridFragment extends BaseLazyFragment {
 
     public static GridFragment newInstance(MovieSort.SortData sortData) {
         return new GridFragment().setArguments(sortData);
+    }
+
+    public static GridFragment newInstance(MovieSort.SortData sortData, boolean rowMode) {
+        GridFragment fragment = new GridFragment().setArguments(sortData);
+        fragment.rowMode = rowMode;
+        return fragment;
     }
 
     public GridFragment setArguments(MovieSort.SortData sortData) {
@@ -190,8 +200,8 @@ public class GridFragment extends BaseLazyFragment {
             mGridView.setVisibility(View.VISIBLE);
         }
         mGridView.setHasFixedSize(true);
-        style=ImgUtil.initStyle();
-        gridAdapter = new GridAdapter(isFolederMode(), style);
+        style = rowMode ? null : ImgUtil.initStyle();
+        gridAdapter = new GridAdapter(isFolederMode(), style, rowMode);
         this.page =1;
         this.maxPage =1;
         this.isLoad = false;
@@ -199,7 +209,10 @@ public class GridFragment extends BaseLazyFragment {
 
     private void initView() {
         this.createView();
-        if(isFolederMode()){
+        if (rowMode) {
+            mGridView.setLayoutManager(new V7LinearLayoutManager(mContext, V7LinearLayoutManager.HORIZONTAL, false));
+            mGridView.setSpacingWithMargins(AutoSizeUtils.mm2px(mContext, 10.0f), 0);
+        } else if(isFolederMode()){
             mGridView.setLayoutManager(new V7LinearLayoutManager(this.mContext, 1, false));
         }else{
             int spanCount = isBaseOnWidth() ? 5 : 6;
@@ -230,6 +243,7 @@ public class GridFragment extends BaseLazyFragment {
             @Override
             public void onItemSelected(TvRecyclerView parent, View itemView, int position) {
                 itemView.animate().scaleX(1.05f).scaleY(1.05f).setDuration(300).setInterpolator(new BounceInterpolator()).start();
+                notifyHero(position);
             }
 
             @Override
@@ -259,7 +273,7 @@ public class GridFragment extends BaseLazyFragment {
                     bundle.putString("id", video.id);
                     bundle.putString("sourceKey", video.sourceKey);
                     bundle.putString("title", video.name);
-                    if( video.tag !=null && (video.tag.equals("folder") || video.tag.equals("cover"))){
+                    if(!rowMode && video.tag !=null && (video.tag.equals("folder") || video.tag.equals("cover"))){
                         focusedView = view;
                         if(("12".indexOf(getUITag()) != -1)){
                             changeView(video.id,video.tag.equals("folder"));
@@ -397,6 +411,7 @@ public class GridFragment extends BaseLazyFragment {
                         isLoad = true;
                         hasActionItems = hasActionVideo(absXml.movie.videoList);
                         gridAdapter.setNewData(absXml.movie.videoList);
+                        notifyHero(0);
                     } else {
                         hasActionItems = hasActionItems || hasActionVideo(absXml.movie.videoList);
                         gridAdapter.addData(absXml.movie.videoList);
@@ -438,6 +453,14 @@ public class GridFragment extends BaseLazyFragment {
 
     public boolean isLoad() {
         return isLoad || !mGrids.empty(); //如果有缓存页的话也可以认为是加载了数据的
+    }
+
+    private void notifyHero(int position) {
+        if (!rowMode || gridAdapter == null) return;
+        if (position < 0 || position >= gridAdapter.getData().size()) return;
+        if (getActivity() instanceof HomeActivity) {
+            ((HomeActivity) getActivity()).updateHero(gridAdapter.getData().get(position));
+        }
     }
 
     public boolean shouldReloadOnSelect() {

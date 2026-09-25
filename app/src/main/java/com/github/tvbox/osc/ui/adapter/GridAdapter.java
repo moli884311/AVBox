@@ -19,11 +19,17 @@ import me.jessyan.autosize.utils.AutoSizeUtils;
 public class GridAdapter extends BaseQuickAdapter<Movie.Video, BaseViewHolder> {
     private boolean mShowList;
     private int defaultWidth;
+    private final boolean mCompactRow;
     public ImgUtil.Style style;
 
     public GridAdapter(boolean showList, ImgUtil.Style style) {
-        super(showList ? R.layout.item_list : R.layout.item_grid, new ArrayList<>());
+        this(showList, style, false);
+    }
+
+    public GridAdapter(boolean showList, ImgUtil.Style style, boolean compactRow) {
+        super(showList ? R.layout.item_list : (compactRow ? R.layout.item_grid_row : R.layout.item_grid), new ArrayList<>());
         this.mShowList = showList;
+        this.mCompactRow = compactRow;
         if (style != null) {
             if (style.type.equals("list")) this.mShowList = true;
             this.defaultWidth = ImgUtil.getStyleDefaultWidth(style);
@@ -72,7 +78,10 @@ public class GridAdapter extends BaseQuickAdapter<Movie.Video, BaseViewHolder> {
         ImageView ivThumb = helper.getView(R.id.ivThumb);
         int newWidth = ImgUtil.defaultWidth;
         int newHeight = ImgUtil.defaultHeight;
-        if (style != null) {
+        if (mCompactRow) {
+            newWidth = 150;
+            newHeight = 200;
+        } else if (style != null) {
             newWidth = defaultWidth;
             newHeight = (int) (newWidth / style.ratio);
         }
@@ -90,7 +99,7 @@ public class GridAdapter extends BaseQuickAdapter<Movie.Video, BaseViewHolder> {
     }
 
     private void applyStyleToImage(final ImageView ivThumb) {
-        if (style != null) {
+        if (style != null && !mCompactRow) {
             ViewGroup container = (ViewGroup) ivThumb.getParent();
             int width = defaultWidth;
             int height = (int) (width / style.ratio);
