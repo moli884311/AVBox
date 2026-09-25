@@ -3,6 +3,9 @@ apply plugin: 'com.android.application'
 android {
     compileSdkVersion 33
 
+    def storeFilePath = project.findProperty("RELEASE_STORE_FILE") ?: ".key/app-release.jks"
+    def storeFileResolved = rootProject.file(storeFilePath)
+
     defaultConfig {
         applicationId 'com.moliys.shell'
         targetSdkVersion 28
@@ -23,9 +26,9 @@ android {
     }
 
     signingConfigs {
-        if (project.hasProperty("RELEASE_STORE_FILE")) {
+        if (storeFileResolved.exists()) {
             release {
-                storeFile file(RELEASE_STORE_FILE)
+                storeFile storeFileResolved
                 storePassword RELEASE_STORE_PASSWORD
                 keyAlias RELEASE_KEY_ALIAS
                 keyPassword RELEASE_KEY_PASSWORD
@@ -85,7 +88,7 @@ android {
         }
         release {
             minifyEnabled true
-            if (project.hasProperty("RELEASE_STORE_FILE")) {
+            if (storeFileResolved.exists()) {
                 signingConfig signingConfigs.release
             }
         }
