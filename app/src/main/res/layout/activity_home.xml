@@ -41,10 +41,14 @@
             android:paddingRight="@dimen/vs_40">
 
             <ImageView
+                android:id="@+id/logo"
                 android:layout_width="@dimen/vs_44"
                 android:layout_height="@dimen/vs_44"
-                android:focusable="false"
-                android:focusableInTouchMode="false"
+                android:background="@drawable/bg_nav_item"
+                android:clickable="true"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:padding="@dimen/vs_4"
                 android:src="@drawable/icon_lingqi"
                 android:contentDescription="@string/app_name" />
 

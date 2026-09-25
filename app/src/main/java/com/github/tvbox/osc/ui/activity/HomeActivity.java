@@ -263,6 +263,16 @@ public class HomeActivity extends BaseActivity {
                 return true;
             }
         });
+        View logoView = findViewById(R.id.logo);
+        if (logoView != null) {
+            logoView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    FastClickCheckUtil.check(v);
+                    showSiteSwitch();
+                }
+            });
+        }
         setLoadSir(this.contentLayout);
         //mHandler.postDelayed(mFindFocus, 500);
     }
