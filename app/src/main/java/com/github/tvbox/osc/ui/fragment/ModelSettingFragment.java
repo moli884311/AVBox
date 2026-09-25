@@ -39,6 +39,7 @@ import com.github.tvbox.osc.ui.dialog.SelectDialog;
 import com.github.tvbox.osc.ui.dialog.XWalkInitDialog;
 import com.github.tvbox.osc.util.DanmuHelper;
 import com.github.tvbox.osc.util.FastClickCheckUtil;
+import com.github.tvbox.osc.util.FocusTouchHelper;
 import com.github.tvbox.osc.util.FileUtils;
 import com.github.tvbox.osc.util.HawkConfig;
 import com.github.tvbox.osc.util.HistoryHelper;
@@ -824,6 +825,7 @@ public class ModelSettingFragment extends BaseLazyFragment {
         findViewById(R.id.llClearCache).setOnClickListener((view -> onClickClearCache(view)));
         bindDanmuExtra();
         applyCategoryFilter();
+        FocusTouchHelper.install(rootView);
     }
 
     private void bindDanmuExtra() {

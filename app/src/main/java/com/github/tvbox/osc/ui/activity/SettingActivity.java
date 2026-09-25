@@ -14,6 +14,7 @@ import com.github.tvbox.osc.base.BaseActivity;
 import com.github.tvbox.osc.util.AppManager;
 import com.github.tvbox.osc.util.DefaultConfig;
 import com.github.tvbox.osc.util.FastClickCheckUtil;
+import com.github.tvbox.osc.util.FocusTouchHelper;
 import com.github.tvbox.osc.util.HawkConfig;
 import com.github.tvbox.osc.util.HistoryHelper;
 import com.github.tvbox.osc.util.OkGoHelper;
@@ -70,6 +71,7 @@ public class SettingActivity extends BaseActivity {
             }
         });
         refreshRowValues();
+        FocusTouchHelper.install(findViewById(android.R.id.content));
     }
 
     private View getClickableRow(int rowId) {
