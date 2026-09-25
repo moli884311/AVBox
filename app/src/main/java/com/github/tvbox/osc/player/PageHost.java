@@ -40,4 +40,11 @@ public interface PageHost {
      * @return 是否已接管后续换源(交给页面详情引擎)
      */
     boolean onPlaybackLinesExhausted();
+
+    /**
+     * 遥控器在详情页竖屏预览态按确认键:请求进入全屏(页面切横屏全屏形态)。
+     *
+     * <p>全屏是页面形态,播放层不自行改方向,否则页面的 `fullScreen` 标记与系统栏/预览样式会脱节。
+     */
+    void requestFullscreen();
 }

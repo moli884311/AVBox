@@ -567,7 +567,12 @@ public class PlayContainer extends FrameLayout implements CustomAdapt, PlaybackH
             }
         });
         surfaceSlot = findViewById(R.id.surfaceSlot);
-        mController = new ComposeVideoController(mActivity);
+        ComposeVideoController videoController = new ComposeVideoController(mActivity);
+        // 遥控确认键在竖屏预览态请求全屏:播放层只管上报,页面形态由 PageHost 决定
+        videoController.setOnPreviewFullscreenRequest(() -> {
+            if (pageHost != null) pageHost.requestFullscreen();
+        });
+        mController = videoController;
 
         mController.getLyricView().setTextSize(previewMode ? 16 : 24);
         mController.setCanChangePosition(true);

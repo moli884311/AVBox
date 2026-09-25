@@ -239,6 +239,8 @@ interface PlayerActions {
     fun onScreenDisplayClicked()
     fun onBackClicked()
     fun onLockClicked()
+    /** 详情页预览态按确认键：请求进入全屏（页面形态，由 PageHost 落地） */
+    fun onPreviewFullscreenRequested()
 
     // 解析
     fun onParseSelected(position: Int)

@@ -133,6 +133,11 @@ class DetailActivity : BaseActivity(), PageHost {
 
     override fun onPlaybackLinesExhausted(): Boolean = startDetailFallbackAfterLinesExhausted()
 
+    /** 遥控确认键在竖屏预览态请求进全屏:交回详情的 fullScreen 状态机(切横屏 + 隐藏系统栏) */
+    override fun requestFullscreen() {
+        vm.setFullScreen(true)
+    }
+
     fun playCurrent() {
         val container = playContainer ?: return
         val session = vm.preparePlaySession()

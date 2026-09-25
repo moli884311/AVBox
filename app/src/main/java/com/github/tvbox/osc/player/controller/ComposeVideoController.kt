@@ -129,6 +129,14 @@ class ComposeVideoController @JvmOverloads constructor(
     private var playerConfig: JSONObject? = null
     private var listener: VodControlListener? = null
 
+    /**
+     * 预览态(详情页竖屏)下遥控确认键"请求进入全屏"的回调。
+     *
+     * <p>全屏属于页面形态,播放层不管;由 [com.github.tvbox.osc.ui.player.PlayContainer] 注入,
+     * 再转发页面的 [com.github.tvbox.osc.player.PageHost.requestFullscreen]。
+     */
+    private var onPreviewFullscreenRequest: Runnable? = null
+
     // 方向键/滚轮步进 seek 的累计进度与提交去抖
     private var keySeekProgress = 0
 
@@ -742,6 +750,11 @@ class ComposeVideoController @JvmOverloads constructor(
         state.lockState = LockVisibility.GONE
     }
 
+    /** 注入"预览态按确认键进入全屏"的动作(页面提供;null = 不处理) */
+    fun setOnPreviewFullscreenRequest(request: Runnable?) {
+        onPreviewFullscreenRequest = request
+    }
+
     override fun setTitle(playTitleInfo: String) {
         state.title = playTitleInfo
     }
@@ -1152,6 +1165,10 @@ class ComposeVideoController @JvmOverloads constructor(
         setLocked(newLocked)
         if (newLocked) hideBottom()
         showLockView()
+    }
+
+    override fun onPreviewFullscreenRequested() {
+        onPreviewFullscreenRequest?.run()
     }
 
     override fun onParseSelected(position: Int) {

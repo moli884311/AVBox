@@ -156,8 +156,8 @@ fun PlayerOverlay(
 /**
  * 遥控器按键路由(仅 TV 生效)。走冒泡阶段,按钮/弹层先消费,未被消费的才落到这里。
  *
- * <p>映射:左右快退/快进([PlayerActions.onSeekStep]);确认键在控制层隐藏时唤出、展开时播放/暂停;
- * 媒体键播放暂停/上下一集;MENU 显隐控制层;BACK 控制层展开时先收起、否则放行退出。
+ * <p>映射:左右快退/快进([PlayerActions.onSeekStep]);确认键在预览态进全屏、控制层隐藏时唤出、
+ * 展开时播放/暂停;媒体键播放暂停/上下一集;MENU 显隐控制层;BACK 控制层展开时先收起、否则放行退出。
  * 上/下不消费,交给焦点系统在控制按钮间移动。
  */
 private fun handlePlayerTvKey(
@@ -183,7 +183,12 @@ private fun handlePlayerTvKey(
         AndroidKeyEvent.KEYCODE_DPAD_CENTER,
         AndroidKeyEvent.KEYCODE_ENTER,
         AndroidKeyEvent.KEYCODE_NUMPAD_ENTER -> {
-            if (!state.controlsVisible) actions.toggleControls() else actions.onPlayPauseClicked()
+            when {
+                // 详情页竖屏预览态:确认键直接进全屏(与触摸点右下角全屏入口同一落点)
+                state.previewMode -> actions.onPreviewFullscreenRequested()
+                !state.controlsVisible -> actions.toggleControls()
+                else -> actions.onPlayPauseClicked()
+            }
             true
         }
         AndroidKeyEvent.KEYCODE_MEDIA_PLAY_PAUSE,
