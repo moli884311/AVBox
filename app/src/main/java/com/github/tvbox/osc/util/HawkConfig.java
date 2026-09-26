@@ -66,6 +66,10 @@ public class HawkConfig {
     public static final String DANMU_SIZE_SCALE = "danmu_size_scale";
     public static final String DANMU_RANDOM_COLOR = "danmu_random_color";
     public static final String DANMU_API = "danmu_api";
+    public static final String DANMU_SOURCE_MODE = "danmu_source_mode";
+    public static final String DANMU_SOURCE_NAME = "danmu_source_name";
+    public static final String DANMU_SOURCE_LIST = "danmu_source_list";
+    public static final String DANMU_SOURCE_LATENCY = "danmu_source_latency";
     public static final String TMDB_TOKEN = "tmdb_token";
     public static final String TMDB_API_KEY = "tmdb_api_key";
     public static final String TMDB_MATCH = "tmdb_match"; // 0 智能 1 精确 2 关闭

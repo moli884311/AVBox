@@ -15,7 +15,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="@dimen/vs_20"
-            android:text="弹幕地址"
+            android:text="自定义弹幕地址"
             android:textColor="@color/dialog_text_primary"
             android:textSize="@dimen/ts_26" />
 
@@ -52,7 +52,7 @@
                 android:focusable="true"
                 android:gravity="center"
                 android:padding="@dimen/vs_10"
-                android:text="默认"
+                android:text="自动"
                 android:textColor="@color/dialog_text_primary"
                 android:textSize="@dimen/ts_22" />
 

@@ -1,6 +1,7 @@
 package com.github.tvbox.osc.ui.dialog;
 
 import android.content.Context;
+import android.text.TextUtils;
 import android.view.KeyEvent;
 import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
@@ -9,9 +10,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 
 import com.github.tvbox.osc.R;
-import com.github.tvbox.osc.api.DanmakuApi;
-import com.github.tvbox.osc.util.HawkConfig;
-import com.orhanobut.hawk.Hawk;
+import com.github.tvbox.osc.api.DanmuSourceManager;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -24,8 +23,8 @@ public class DanmuApiDialog extends BaseDialog {
         setContentView(R.layout.dialog_danmu_api);
         setCanceledOnTouchOutside(false);
         input = findViewById(R.id.input);
-        input.setText(Hawk.get(HawkConfig.DANMU_API, ""));
-        input.setHint(getDefaultApi());
+        input.setText(DanmuSourceManager.getSelectedUrl());
+        input.setHint("请输入弹幕搜索地址");
         findViewById(R.id.inputDefault).setOnClickListener(v -> saveDefault());
         findViewById(R.id.inputSubmit).setOnClickListener(v -> save(input.getText().toString().trim()));
         input.setOnEditorActionListener(new TextView.OnEditorActionListener() {
@@ -40,19 +39,18 @@ public class DanmuApiDialog extends BaseDialog {
         });
     }
 
-    private String getDefaultApi() {
-        String api = DanmakuApi.getDisplayApiUrl();
-        return api.isEmpty() ? "请输入弹幕搜索地址" : api;
-    }
-
     private void save(String api) {
-        DanmakuApi.setCustomApi(api);
+        if (TextUtils.isEmpty(api)) {
+            saveDefault();
+            return;
+        }
+        DanmuSourceManager.selectCustom(api);
         if (listener != null) listener.onChange(api);
         dismiss();
     }
 
     private void saveDefault() {
-        DanmakuApi.setUseDefault(true);
+        DanmuSourceManager.useAuto();
         if (listener != null) listener.onChange("");
         dismiss();
     }

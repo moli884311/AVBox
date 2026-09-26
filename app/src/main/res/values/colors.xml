@@ -100,4 +100,10 @@
     <color name="detail_chip_bg">#40000000</color>
     <color name="detail_chip_bg_focus">#66000000</color>
     <color name="detail_chip_bg_selected">#F2E23B2E</color>
+
+    <!-- 弹幕接口源 -->
+    <color name="danmu_status_ok">#FF52C41A</color>
+    <color name="danmu_status_bad">#FFE23B2E</color>
+    <color name="danmu_status_idle">#80FFFFFF</color>
+    <color name="danmu_status_selected">#FFE8B34B</color>
 </resources>

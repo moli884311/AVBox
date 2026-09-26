@@ -19,7 +19,7 @@ import androidx.recyclerview.widget.DiffUtil;
 
 import com.github.tvbox.osc.R;
 import com.github.tvbox.osc.api.ApiConfig;
-import com.github.tvbox.osc.api.DanmakuApi;
+import com.github.tvbox.osc.api.DanmuSourceManager;
 import com.github.tvbox.osc.base.BaseActivity;
 import com.github.tvbox.osc.base.BaseLazyFragment;
 import com.github.tvbox.osc.bean.IJKCode;
@@ -33,7 +33,7 @@ import com.github.tvbox.osc.ui.dialog.AboutDialog;
 import com.github.tvbox.osc.ui.dialog.ApiDialog;
 import com.github.tvbox.osc.ui.dialog.ApiHistoryDialog;
 import com.github.tvbox.osc.ui.dialog.BackupDialog;
-import com.github.tvbox.osc.ui.dialog.DanmuApiDialog;
+import com.github.tvbox.osc.ui.dialog.DanmuSourceDialog;
 import com.github.tvbox.osc.ui.dialog.SearchRemoteTvDialog;
 import com.github.tvbox.osc.ui.dialog.TmdbConfigDialog;
 import com.github.tvbox.osc.ui.dialog.SelectDialog;
@@ -775,10 +775,10 @@ public class ModelSettingFragment extends BaseLazyFragment {
             @Override
             public void onClick(View v) {
                 FastClickCheckUtil.check(v);
-                DanmuApiDialog dialog = new DanmuApiDialog(mActivity);
-                dialog.setOnListener(new DanmuApiDialog.OnListener() {
+                DanmuSourceDialog dialog = new DanmuSourceDialog(mActivity);
+                dialog.setOnListener(new DanmuSourceDialog.OnListener() {
                     @Override
-                    public void onChange(String api) {
+                    public void onChange() {
                         refreshDanmuApiText();
                     }
                 });
@@ -1121,17 +1121,7 @@ public class ModelSettingFragment extends BaseLazyFragment {
 
     private void refreshDanmuApiText() {
         if (tvDanmuApiText == null) return;
-        if (DanmakuApi.isUseDefault()) {
-            tvDanmuApiText.setText("默认");
-            return;
-        }
-        String custom = Hawk.get(HawkConfig.DANMU_API, "");
-        if (!custom.isEmpty()) {
-            tvDanmuApiText.setText("自定义");
-            return;
-        }
-        String config = ApiConfig.get().getDanmaku();
-        tvDanmuApiText.setText(config.isEmpty() ? "默认" : "接口");
+        tvDanmuApiText.setText(DanmuSourceManager.getModeText());
     }
 
     private void updateApiRowWeight(boolean showLine) {
