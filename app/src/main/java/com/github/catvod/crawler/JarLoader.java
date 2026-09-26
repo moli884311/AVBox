@@ -105,21 +105,24 @@ public class JarLoader {
     }
 
     private boolean invokeInit(DexClassLoader loader, String jar) {
-        boolean protectedJar = false;
+        Class<?> clz;
         try {
-            Class<?> clz = loader.loadClass("com.github.catvod.spider.Init");
-            protectedJar = protectedInitJar.check(jar);
-            if (protectedJar) {
-                Log.i(TAG, "echo-load initProtectedJar file=" + jar);
-                return protectedInitJar.init(clz);
-            } else {
-                Method method = clz.getMethod("init", Context.class);
-                method.invoke(null, App.getInstance());
-            }
+            clz = loader.loadClass("com.github.catvod.spider.Init");
+        } catch (Throwable e) {
+            e.printStackTrace();
+            return true;
+        }
+        if (protectedInitJar.check(jar) && protectedInitJar.init(clz)) {
+            Log.i(TAG, "echo-load initProtectedJar file=" + jar);
+            return true;
+        }
+        try {
+            Method method = clz.getMethod("init", Context.class);
+            method.invoke(null, App.getInstance());
         } catch (Throwable e) {
             e.printStackTrace();
         }
-        return !protectedJar;
+        return true;
     }
 
     private void invokeProxy(String key, DexClassLoader loader) {
