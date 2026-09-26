@@ -1,10 +1,12 @@
 package com.github.tvbox.osc.ui.tv.widget;
 
 import android.content.Context;
+import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.FrameLayout;
+import android.widget.TextView;
 
 import androidx.annotation.AttrRes;
 import androidx.annotation.NonNull;
@@ -12,28 +14,35 @@ import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.chad.library.adapter.base.BaseMultiItemQuickAdapter;
 import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.chad.library.adapter.base.BaseViewHolder;
-import com.chad.library.adapter.base.entity.MultiItemEntity;
 import com.github.tvbox.osc.R;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 
 /**
- * @author pj567
- * @date :2020/12/23
- * @description:
+ * 电视端搜索键盘: 全键盘(A-Z) 与 T9 数字键盘两种布局, 数字为真实可输入。
  */
 public class SearchKeyboard extends FrameLayout {
+    public static final int MODE_FULL = 0;
+    public static final int MODE_T9 = 1;
+
+    public static final String KEY_BACKSPACE = "删除";
+    public static final String KEY_CLEAR = "清空";
+    public static final String KEY_TO_T9 = "123";
+    public static final String KEY_TO_FULL = "ABC";
+
     private RecyclerView mRecyclerView;
-    private List<String> keys = Arrays.asList("远程搜索", "删除", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0");
-    private List<Keyboard> keyboardList = new ArrayList<>();
+    private KeyboardAdapter adapter;
+    private GridLayoutManager manager;
+    private final List<Keyboard> keyboardList = new ArrayList<>();
+    private int mode = MODE_FULL;
     private OnSearchKeyListener searchKeyListener;
-    private OnFocusChangeListener focusChangeListener = new OnFocusChangeListener() {
+    private OnModeChangeListener modeChangeListener;
+
+    private final OnFocusChangeListener focusChangeListener = new OnFocusChangeListener() {
         @Override
         public void onFocusChange(View itemView, boolean hasFocus) {
             if (null != itemView && itemView != mRecyclerView) {
@@ -57,8 +66,8 @@ public class SearchKeyboard extends FrameLayout {
 
     private void initView() {
         View view = LayoutInflater.from(getContext()).inflate(R.layout.layout_keyborad, this);
-        mRecyclerView = (RecyclerView) view.findViewById(R.id.mRecyclerView);
-        GridLayoutManager manager = new GridLayoutManager(getContext(), 6);
+        mRecyclerView = view.findViewById(R.id.mRecyclerView);
+        manager = new GridLayoutManager(getContext(), 5);
         mRecyclerView.setLayoutManager(manager);
         mRecyclerView.addOnChildAttachStateChangeListener(new RecyclerView.OnChildAttachStateChangeListener() {
             @Override
@@ -70,73 +79,121 @@ public class SearchKeyboard extends FrameLayout {
 
             @Override
             public void onChildViewDetachedFromWindow(@NonNull View view) {
-
             }
         });
-        int size = keys.size();
-        for (int i = 0; i < size; i++) {
-            keyboardList.add(new Keyboard(1, keys.get(i)));
-        }
-        final KeyboardAdapter adapter = new KeyboardAdapter(keyboardList);
-        mRecyclerView.setAdapter(adapter);
+        adapter = new KeyboardAdapter(keyboardList);
+        adapter.setOnItemClickListener(new BaseQuickAdapter.OnItemClickListener() {
+            @Override
+            public void onItemClick(BaseQuickAdapter a, View view, int position) {
+                if (position < 0 || position >= keyboardList.size()) return;
+                onKey(keyboardList.get(position).label);
+            }
+        });
         adapter.setSpanSizeLookup(new BaseQuickAdapter.SpanSizeLookup() {
             @Override
             public int getSpanSize(GridLayoutManager gridLayoutManager, int position) {
-                if (position == 0)
-                    return 3;
-                else if (position == 1)
-                    return 3;
+                if (mode == MODE_FULL) {
+                    if (position == keyboardList.size() - 1) return 2;
+                    return 1;
+                }
                 return 1;
             }
         });
+        mRecyclerView.setAdapter(adapter);
+        applyMode();
+    }
 
-        adapter.setOnItemClickListener(new BaseQuickAdapter.OnItemClickListener() {
+    private void onKey(String key) {
+        if (TextUtils.isEmpty(key)) return;
+        if (KEY_TO_T9.equals(key)) {
+            setMode(MODE_T9);
+            return;
+        }
+        if (KEY_TO_FULL.equals(key)) {
+            setMode(MODE_FULL);
+            return;
+        }
+        if (searchKeyListener != null) {
+            searchKeyListener.onSearchKey(key);
+        }
+    }
+
+    public void setMode(int newMode) {
+        if (newMode != MODE_FULL && newMode != MODE_T9) return;
+        if (mode == newMode && !keyboardList.isEmpty()) return;
+        mode = newMode;
+        applyMode();
+        if (modeChangeListener != null) {
+            modeChangeListener.onModeChanged(mode);
+        }
+    }
+
+    public int getMode() {
+        return mode;
+    }
+
+    private void applyMode() {
+        keyboardList.clear();
+        if (mode == MODE_FULL) {
+            manager.setSpanCount(5);
+            for (int i = 0; i < 26; i++) {
+                keyboardList.add(new Keyboard(String.valueOf((char) ('A' + i)), ""));
+            }
+            keyboardList.add(new Keyboard(KEY_TO_T9, ""));
+            keyboardList.add(new Keyboard(KEY_BACKSPACE, ""));
+            keyboardList.add(new Keyboard(KEY_CLEAR, ""));
+        } else {
+            manager.setSpanCount(3);
+            keyboardList.add(new Keyboard("1", ""));
+            keyboardList.add(new Keyboard("2", "ABC"));
+            keyboardList.add(new Keyboard("3", "DEF"));
+            keyboardList.add(new Keyboard("4", "GHI"));
+            keyboardList.add(new Keyboard("5", "JKL"));
+            keyboardList.add(new Keyboard("6", "MNO"));
+            keyboardList.add(new Keyboard("7", "PQRS"));
+            keyboardList.add(new Keyboard("8", "TUV"));
+            keyboardList.add(new Keyboard("9", "WXYZ"));
+            keyboardList.add(new Keyboard(KEY_BACKSPACE, ""));
+            keyboardList.add(new Keyboard("0", ""));
+            keyboardList.add(new Keyboard(KEY_CLEAR, ""));
+        }
+        if (adapter != null) {
+            adapter.setNewData(new ArrayList<>(keyboardList));
+            adapter.notifyDataSetChanged();
+        }
+        mRecyclerView.post(new Runnable() {
             @Override
-            public void onItemClick(BaseQuickAdapter adapter, View view, int position) {
-                Keyboard keyboard = (Keyboard) adapter.getItem(position);
-                if (searchKeyListener != null) {
-                    searchKeyListener.onSearchKey(position, keyboard.getKey());
-                }
+            public void run() {
+                manager.setSpanCount(mode == MODE_FULL ? 5 : 3);
             }
         });
     }
 
-    static class Keyboard implements MultiItemEntity {
-        private int itemType;
-        private String key;
+    static class Keyboard {
+        private final String label;
+        private final String sub;
 
-        private Keyboard(int itemType, String key) {
-            this.itemType = itemType;
-            this.key = key;
-        }
-
-        @Override
-        public int getItemType() {
-            return itemType;
-        }
-
-        public String getKey() {
-            return key;
-        }
-
-        public void setKey(String key) {
-            this.key = key;
+        private Keyboard(String label, String sub) {
+            this.label = label;
+            this.sub = sub;
         }
     }
 
-    private static class KeyboardAdapter extends BaseMultiItemQuickAdapter<Keyboard, BaseViewHolder> {
+    private static class KeyboardAdapter extends BaseQuickAdapter<Keyboard, BaseViewHolder> {
 
         private KeyboardAdapter(List<Keyboard> data) {
-            super(data);
-            addItemType(1, R.layout.item_keyboard);
+            super(R.layout.item_keyboard, data);
         }
 
         @Override
         protected void convert(BaseViewHolder helper, Keyboard item) {
-            switch (helper.getItemViewType()) {
-                case 1:
-                    helper.setText(R.id.keyName, item.key);
-                    break;
+            helper.setText(R.id.keyName, item.label);
+            TextView sub = helper.getView(R.id.keySub);
+            if (TextUtils.isEmpty(item.sub)) {
+                sub.setVisibility(View.GONE);
+            } else {
+                sub.setVisibility(View.VISIBLE);
+                sub.setText(item.sub);
             }
         }
     }
@@ -145,7 +202,15 @@ public class SearchKeyboard extends FrameLayout {
         searchKeyListener = listener;
     }
 
+    public void setOnModeChangeListener(OnModeChangeListener listener) {
+        modeChangeListener = listener;
+    }
+
     public interface OnSearchKeyListener {
-        void onSearchKey(int pos, String key);
+        void onSearchKey(String key);
+    }
+
+    public interface OnModeChangeListener {
+        void onModeChanged(int mode);
     }
 }
