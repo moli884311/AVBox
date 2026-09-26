@@ -87,4 +87,17 @@
     <color name="cinema_scrim">#F20A0F1A</color>
     <color name="cinema_scrim_side">#B3000000</color>
     <color name="filter_scrim">#B3000000</color>
+
+    <!-- 详情页沉浸式版式 -->
+    <color name="detail_text_secondary">#D9F5F0E6</color>
+    <color name="detail_text_tertiary">#A6F5F0E6</color>
+    <color name="detail_text_on_light">#FF10131A</color>
+    <color name="detail_button_bg">#26FFFFFF</color>
+    <color name="detail_button_bg_focus">#F2F5F0E6</color>
+    <color name="detail_button_stroke">#33FFFFFF</color>
+    <color name="detail_button_primary">#E23B2E</color>
+    <color name="detail_button_primary_focus">#FF6A4A</color>
+    <color name="detail_chip_bg">#40000000</color>
+    <color name="detail_chip_bg_focus">#66000000</color>
+    <color name="detail_chip_bg_selected">#F2E23B2E</color>
 </resources>

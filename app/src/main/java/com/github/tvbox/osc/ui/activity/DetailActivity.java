@@ -50,10 +50,12 @@ import com.github.tvbox.osc.ui.fragment.PlayFragment;
 import com.github.tvbox.osc.util.DefaultConfig;
 import com.github.tvbox.osc.util.FastClickCheckUtil;
 import com.github.tvbox.osc.util.HawkConfig;
+import com.github.tvbox.osc.util.ImgUtil;
 import com.github.tvbox.osc.util.LOG;
 import com.github.tvbox.osc.util.MD5;
 import com.github.tvbox.osc.util.SearchHelper;
 import com.github.tvbox.osc.util.SubtitleHelper;
+import com.github.tvbox.osc.util.TmdbHelper;
 import com.github.tvbox.osc.viewmodel.SourceViewModel;
 import com.lzy.okgo.OkGo;
 import com.orhanobut.hawk.Hawk;
@@ -79,8 +81,6 @@ import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import me.jessyan.autosize.utils.AutoSizeUtils;
-
 import android.graphics.Paint;
 
 /**
@@ -101,25 +101,20 @@ public class DetailActivity extends BaseActivity {
     private View llPlayerFragmentContainerBlock;
     private View llPlayerPlace;
     private PlayFragment playFragment = null;
-    private View thumbContainer;
-    private ImageView ivThumb;
+    private ImageView ivDetailBackdrop;
     private TextView tvName;
-    private TextView tvYear;
-    private TextView tvSite;
-    private TextView tvArea;
-    private TextView tvLang;
-    private TextView tvType;
-    private TextView tvActor;
-    private TextView tvDirector;
+    private TextView tvMeta;
+    private TextView tvCredits;
     private TextView tvPlayUrl;
     private TextView tvDes;
     private TextView tvPlay;
-//    private TextView tvSort;
-    private TextView tvDesc;
+    private TextView tvCurrentLine;
     private TextView tvSeriesSort;
     private TextView tvQuickSearch;
     private TextView tvChangeSource;
     private TextView tvCollect;
+    private LinearLayout llRouteHeader;
+    private String detailTmdbKey = "";
     private TvRecyclerView mGridViewFlag;
     private TvRecyclerView mGridViewQuality;
     private TvRecyclerView mGridView;
@@ -182,26 +177,20 @@ public class DetailActivity extends BaseActivity {
         llPlayerFragmentContainer = findViewById(R.id.previewPlayer);
         llPlayerFragmentContainerBlock = findViewById(R.id.previewPlayerBlock);
         applyPreviewRoundCorners();
-        thumbContainer = findViewById(R.id.thumbContainer);
-        ivThumb = findViewById(R.id.ivThumb);
+        ivDetailBackdrop = findViewById(R.id.ivDetailBackdrop);
         applyThumbPreviewStyle();
         tvName = findViewById(R.id.tvName);
-        tvYear = findViewById(R.id.tvYear);
-        tvSite = findViewById(R.id.tvSite);
-        tvArea = findViewById(R.id.tvArea);
-        tvLang = findViewById(R.id.tvLang);
-        tvType = findViewById(R.id.tvType);
-        tvActor = findViewById(R.id.tvActor);
-        tvDirector = findViewById(R.id.tvDirector);
+        tvMeta = findViewById(R.id.tvMeta);
+        tvCredits = findViewById(R.id.tvCredits);
         tvPlayUrl = findViewById(R.id.tvPlayUrl);
         tvDes = findViewById(R.id.tvDes);
         tvPlay = findViewById(R.id.tvPlay);
-//        tvSort = findViewById(R.id.tvSort);
-        tvDesc = findViewById(R.id.tvDesc);
+        tvCurrentLine = findViewById(R.id.tvCurrentLine);
         tvSeriesSort = findViewById(R.id.mSeriesSortTv);
         tvCollect = findViewById(R.id.tvCollect);
         tvQuickSearch = findViewById(R.id.tvQuickSearch);
         tvChangeSource = findViewById(R.id.tvChangeSource);
+        llRouteHeader = findViewById(R.id.llRouteHeader);
         mEmptyPlayList = findViewById(R.id.mEmptyPlaylist);
         mGridView = findViewById(R.id.mGridView);
         mGridView.setHasFixedSize(false);
@@ -259,6 +248,7 @@ public class DetailActivity extends BaseActivity {
                 if (playFragment.selectQuality(position)) {
                     qualityPosition = position;
                     qualityAdapter.notifyDataSetChanged();
+                    updateCurrentLineText();
                 }
             }
         });
@@ -405,18 +395,21 @@ public class DetailActivity extends BaseActivity {
                 }
             }
         });
-        tvDesc.setOnClickListener(new View.OnClickListener() {
+        tvDes.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        FastClickCheckUtil.check(v);
-                        DescDialog dialog = new DescDialog(mContext);
-                        dialog.setDescribe(removeHtmlTag(mVideo.des));
-                        dialog.show();
-                    }
-                });
+                showFullDesc();
+            }
+        });
+        tvCurrentLine.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                FastClickCheckUtil.check(v);
+                if (mGridViewQuality.getVisibility() == View.VISIBLE) {
+                    mGridViewQuality.requestFocus();
+                } else {
+                    mGridViewFlag.requestFocus();
+                }
             }
         });
 
@@ -638,7 +631,7 @@ public class DetailActivity extends BaseActivity {
         if (vodInfo != null && vodInfo.seriesMap.get(vodInfo.playFlag).size() > 0) {
             preFlag = vodInfo.playFlag;
             //更新播放地址
-            setTextShow(tvPlayUrl, "播放地址：", vodInfo.seriesMap.get(vodInfo.playFlag).get(vodInfo.playIndex).url);
+            tvPlayUrl.setText("播放地址：" + vodInfo.seriesMap.get(vodInfo.playFlag).get(vodInfo.playIndex).url);
             Bundle bundle = new Bundle();
             //保存历史
             insertVod(firstsourceKey, vodInfo);
@@ -709,14 +702,15 @@ public class DetailActivity extends BaseActivity {
             }
         }
         w += 32;
-        int screenWidth = getWindowManager().getDefaultDisplay().getWidth()/3;
+        int screenWidth = getWindowManager().getDefaultDisplay().getWidth()/2;
         int offset = screenWidth/w;
         if(offset <=2) offset =2;
-        if(offset > 6) offset =6;
+        if(offset > 8) offset =8;
         mGridViewLayoutMgr.setSpanCount(offset);
         seriesAdapter.setNewData(vodInfo.seriesMap.get(vodInfo.playFlag));
 
         setSeriesGroupOptions();
+        updateCurrentLineText();
 
         mGridView.postDelayed(new Runnable() {
             @Override
@@ -727,15 +721,32 @@ public class DetailActivity extends BaseActivity {
         }, 100);
     }
 
+    private void updateCurrentLineText() {
+        if (tvCurrentLine == null) return;
+        if (vodInfo == null || TextUtils.isEmpty(vodInfo.playFlag)) {
+            tvCurrentLine.setText("当前线路");
+            return;
+        }
+        String text = vodInfo.playFlag;
+        if (qualityOptions.size() > 1 && qualityPosition >= 0 && qualityPosition < qualityOptions.size()) {
+            text = text + " | " + qualityOptions.get(qualityPosition);
+        }
+        tvCurrentLine.setText(text);
+    }
+
     @SuppressLint("NotifyDataSetChanged")
     private void setSeriesGroupOptions(){
         List<VodInfo.VodSeries> list = vodInfo.seriesMap.get(vodInfo.playFlag);
         int listSize = list.size();
         int offset = mGridViewLayoutMgr.getSpanCount();
         seriesGroupOptions.clear();
-        GroupCount=(offset==3 || offset==6)?30:20;
-        if(listSize>100 && listSize<=400)GroupCount=60;
-        if(listSize>400)GroupCount=120;
+        if (offset >= 7) {
+            GroupCount = offset * 3;
+        } else {
+            GroupCount = (offset == 3) ? 20 : 30;
+            if (listSize > 100 && listSize <= 400) GroupCount = 60;
+            if (listSize > 400) GroupCount = 120;
+        }
         if(listSize > 1) {
             tvSeriesGroup.setVisibility(View.VISIBLE);
             int remainedOptionSize = listSize % GroupCount;
@@ -778,6 +789,7 @@ public class DetailActivity extends BaseActivity {
             if (qualityPosition == 0) return;
             qualityPosition = 0;
             qualityAdapter.notifyDataSetChanged();
+            updateCurrentLineText();
             return;
         }
         qualityOptions.clear();
@@ -788,21 +800,13 @@ public class DetailActivity extends BaseActivity {
         seriesFlagAdapter.notifyDataSetChanged();
         seriesAdapter.notifyDataSetChanged();
         qualityAdapter.setNewData(new ArrayList<>(qualityOptions));
+        updateCurrentLineText();
         int up = tvSeriesGroup.getVisibility() == View.VISIBLE ? R.id.mSeriesSortTv : R.id.mGridViewFlag;
         int down = visible ? R.id.mGridViewQuality : R.id.mGridView;
         mGridViewQuality.setNextFocusUpId(up);
         mGridViewQuality.setNextFocusDownId(R.id.mGridView);
         tvSeriesSort.setNextFocusDownId(down);
         mSeriesGroupView.setNextFocusDownId(down);
-    }
-
-    private void setTextShow(TextView view, String tag, String info) {
-        if (info == null || info.trim().isEmpty()) {
-            view.setVisibility(View.GONE);
-            return;
-        }
-        view.setVisibility(View.VISIBLE);
-        view.setText(Html.fromHtml(getHtml(tag, info)));
     }
 
     private String removeHtmlTag(String info) {
@@ -813,6 +817,79 @@ public class DetailActivity extends BaseActivity {
                 ? Html.fromHtml(text, Html.FROM_HTML_MODE_LEGACY).toString()
                 : Html.fromHtml(text).toString();
         return text.replaceAll("\\s", "");
+    }
+
+    private void showFullDesc() {
+        if (mVideo == null) return;
+        DescDialog dialog = new DescDialog(mContext);
+        dialog.setDescribe(removeHtmlTag(mVideo.des));
+        dialog.show();
+    }
+
+    private void appendMeta(StringBuilder sb, String value) {
+        if (TextUtils.isEmpty(value)) return;
+        if (sb.length() > 0) sb.append(" · ");
+        sb.append(value.trim());
+    }
+
+    private void bindDetailMeta(Movie.Video video, SourceBean displaySource) {
+        StringBuilder meta = new StringBuilder();
+        if (video.year > 0) meta.append(video.year);
+        appendMeta(meta, video.state);
+        appendMeta(meta, video.area);
+        appendMeta(meta, video.type);
+        if (displaySource != null && !TextUtils.isEmpty(displaySource.getName())) {
+            if (!TextUtils.equals(firstsourceKey, sourceKey)) {
+                appendMeta(meta, "[" + displaySource.getName() + "] 解析");
+            } else {
+                appendMeta(meta, displaySource.getName());
+            }
+        }
+        tvMeta.setText(meta.toString());
+        tvMeta.setVisibility(meta.length() == 0 ? View.GONE : View.VISIBLE);
+
+        StringBuilder credits = new StringBuilder();
+        String actor = removeHtmlTag(video.actor);
+        String director = removeHtmlTag(video.director);
+        if (!TextUtils.isEmpty(actor)) credits.append("主演 ").append(actor);
+        if (!TextUtils.isEmpty(director)) {
+            if (credits.length() > 0) credits.append("     ");
+            credits.append("导演 ").append(director);
+        }
+        tvCredits.setText(credits.toString());
+        tvCredits.setVisibility(credits.length() == 0 ? View.GONE : View.VISIBLE);
+    }
+
+    private String detailPic(Movie.Video video) {
+        String pic = (video == null || video.pic == null) ? "" : video.pic.trim();
+        if (pic.contains("/s_ratio_poster/")) {
+            pic = pic.replace("/s_ratio_poster/", "/l/");
+        }
+        return DefaultConfig.checkReplaceProxy(pic);
+    }
+
+    private void loadDetailBackdrop(final Movie.Video video) {
+        if (ivDetailBackdrop == null || video == null) return;
+        final String fallback = detailPic(video);
+        if (!TextUtils.isEmpty(fallback)) {
+            ImgUtil.load(fallback, ivDetailBackdrop, 0, 0, 0, video.name);
+        }
+        if (!TmdbHelper.isEnabled() || TextUtils.isEmpty(video.name)) return;
+        final String requestKey = video.name + "#" + video.year;
+        detailTmdbKey = requestKey;
+        TmdbHelper.loadMeta(video.name, video.year, new TmdbHelper.Callback() {
+            @Override
+            public void onResult(final TmdbHelper.Meta meta) {
+                if (meta == null || TextUtils.isEmpty(meta.backdrop)) return;
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (!requestKey.equals(detailTmdbKey) || ivDetailBackdrop == null) return;
+                        ImgUtil.load(meta.backdrop, ivDetailBackdrop, 0, 0, 0, video.name, fallback);
+                    }
+                });
+            }
+        });
     }
 
     private void applyPreviewRoundCorners() {
@@ -833,10 +910,9 @@ public class DetailActivity extends BaseActivity {
     }
 
     private void applyThumbPreviewStyle() {
-        thumbContainer.setVisibility(showPreview ? View.GONE : View.VISIBLE);
-        llPlayerPlace.setVisibility(showPreview ? View.VISIBLE : View.GONE);
-        ivThumb.setVisibility(!showPreview ? View.VISIBLE : View.GONE);
-        thumbContainer.setBackgroundResource(showPreview ? R.drawable.shape_detail_thumb_bg : R.drawable.shape_detail_thumb_idle_bg);
+        if (llPlayerPlace != null) {
+            llPlayerPlace.setVisibility(showPreview ? View.VISIBLE : View.GONE);
+        }
     }
 
     private void setPreviewRoundClip(boolean enable) {
@@ -898,26 +974,15 @@ public class DetailActivity extends BaseActivity {
                     if (displaySource == null) {
                         displaySource = ApiConfig.get().getSource(sourceKey);
                     }
-                    setTextShow(tvSite, "来源：", displaySource == null ? "" : displaySource.getName());
-                    setTextShow(tvYear, "年份：", mVideo.year == 0 ? "" : String.valueOf(mVideo.year));
-                    setTextShow(tvArea, "地区：", mVideo.area);
-                    setTextShow(tvLang, "语言：", mVideo.lang);
-                    if (!firstsourceKey.equals(sourceKey)) {
-                    	setTextShow(tvType, "类型：", "[" + ApiConfig.get().getSource(sourceKey).getName() + "] 解析");
-                    } else {
-                    	setTextShow(tvType, "类型：", mVideo.type);
-                    }
-                    setTextShow(tvActor, "演员：", removeHtmlTag(mVideo.actor));
-                    setTextShow(tvDirector, "导演：", removeHtmlTag(mVideo.director));
-                    setTextShow(tvDes, "内容简介：", removeHtmlTag(mVideo.des));
-                    if (!TextUtils.isEmpty(mVideo.pic)) {
-                        com.github.tvbox.osc.util.ImgUtil.load(DefaultConfig.checkReplaceProxy(mVideo.pic), ivThumb, AutoSizeUtils.mm2px(mContext, 10), AutoSizeUtils.mm2px(mContext, 300), AutoSizeUtils.mm2px(mContext, 400), mVideo.name);
-                    } else {
-                        ivThumb.setImageDrawable(com.github.tvbox.osc.util.ImgUtil.createTextDrawable(mVideo.name));
-                    }
+                    bindDetailMeta(mVideo, displaySource);
+                    String detailDesc = removeHtmlTag(mVideo.des);
+                    tvDes.setText(detailDesc);
+                    tvDes.setVisibility(TextUtils.isEmpty(detailDesc) ? View.GONE : View.VISIBLE);
+                    loadDetailBackdrop(mVideo);
 
                     if (vodInfo.seriesMap != null && vodInfo.seriesMap.size() > 0) {
                         mGridViewFlag.setVisibility(View.VISIBLE);
+                        llRouteHeader.setVisibility(View.VISIBLE);
                         mGridView.setVisibility(View.VISIBLE);
                         tvPlay.setVisibility(View.VISIBLE);
                         mEmptyPlayList.setVisibility(View.GONE);
@@ -958,7 +1023,7 @@ public class DetailActivity extends BaseActivity {
                                 flag.selected = false;
                         }
                         //设置播放地址
-                        setTextShow(tvPlayUrl, "播放地址：", playingSeriesList.get(vodInfo.playIndex).url);
+                        tvPlayUrl.setText("播放地址：" + playingSeriesList.get(vodInfo.playIndex).url);
                         seriesFlagAdapter.setNewData(vodInfo.seriesFlags);
                         mGridViewFlag.scrollToPosition(flagScrollTo);
 
@@ -972,6 +1037,7 @@ public class DetailActivity extends BaseActivity {
                         // startQuickSearch();
                     } else {
                         mGridViewFlag.setVisibility(View.GONE);
+                        llRouteHeader.setVisibility(View.GONE);
                         mGridView.setVisibility(View.GONE);
                         tvSeriesGroup.setVisibility(View.GONE);
                         tvPlay.setVisibility(View.GONE);
@@ -996,13 +1062,6 @@ public class DetailActivity extends BaseActivity {
                 onDetailFallbackSearchResult(absXml);
             }
         });
-    }
-
-    private String getHtml(String label, String content) {
-        if (content == null) {
-            content = "";
-        }
-        return label + "<font color=\"#FFFFFF\">" + content + "</font>";
     }
 
     private String  vod_picture="";
@@ -2073,6 +2132,7 @@ public class DetailActivity extends BaseActivity {
         llPlayerFragmentContainerBlock.setVisibility(!fullWindows && showPreview ? View.VISIBLE : View.GONE);
         mGridView.setVisibility(fullWindows ? View.GONE : View.VISIBLE);
         mGridViewFlag.setVisibility(fullWindows ? View.GONE : View.VISIBLE);
+        llRouteHeader.setVisibility(fullWindows ? View.GONE : View.VISIBLE);
         if (fullWindows) {
             tvSeriesGroup.setVisibility(View.GONE);
         } else {
@@ -2124,6 +2184,6 @@ public class DetailActivity extends BaseActivity {
 
     private void setTvPlayUrl(String url)
     {
-        setTextShow(tvPlayUrl, "播放地址：", url);
+        tvPlayUrl.setText("播放地址：" + url);
     }
 }

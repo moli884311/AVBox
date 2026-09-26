@@ -2,7 +2,6 @@ package com.github.tvbox.osc.ui.adapter;
 
 import android.app.Activity;
 import android.view.View;
-import android.widget.TextView;
 
 import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.chad.library.adapter.base.BaseViewHolder;
@@ -23,13 +22,7 @@ public class SeriesFlagAdapter extends BaseQuickAdapter<VodInfo.VodSeriesFlag, B
 
     @Override
     protected void convert(BaseViewHolder helper, VodInfo.VodSeriesFlag item) {
-        TextView tvSeries = helper.getView(R.id.tvSeriesFlag);
-        View select = helper.getView(R.id.tvSeriesFlagSelect);
-        if (item.selected) {
-            select.setVisibility(View.VISIBLE);
-        } else {
-            select.setVisibility(View.GONE);
-        }
+        helper.getView(R.id.tvSeriesFlagSelect).setVisibility(item.selected ? View.VISIBLE : View.GONE);
         helper.setText(R.id.tvSeriesFlag, item.name);
         View mSeriesGroupTv = ((Activity) helper.itemView.getContext()).findViewById(R.id.mSeriesGroupTv);
         View mGridViewQuality = ((Activity) helper.itemView.getContext()).findViewById(R.id.mGridViewQuality);

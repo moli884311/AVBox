@@ -1,9 +1,7 @@
 package com.github.tvbox.osc.ui.adapter;
 
 import android.app.Activity;
-import android.graphics.Color;
 import android.view.View;
-import android.widget.TextView;
 
 import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.chad.library.adapter.base.BaseViewHolder;
@@ -21,18 +19,13 @@ import java.util.ArrayList;
 public class SeriesAdapter extends BaseQuickAdapter<VodInfo.VodSeries, BaseViewHolder> {
     private V7GridLayoutManager mGridLayoutManager;
     public SeriesAdapter(V7GridLayoutManager gridLayoutManager) {
-        super(R.layout.item_series, new ArrayList<>());
+        super(R.layout.item_detail_episode, new ArrayList<>());
         this.mGridLayoutManager = gridLayoutManager;
     }
 
     @Override
     protected void convert(BaseViewHolder helper, VodInfo.VodSeries item) {
-        TextView tvSeries = helper.getView(R.id.tvSeries);
-        if (item.selected) {
-            tvSeries.setTextColor(mContext.getResources().getColor(R.color.color_02F8E1));
-        } else {
-            tvSeries.setTextColor(Color.WHITE);
-        }
+        helper.getView(R.id.tvSeriesSelect).setVisibility(item.selected ? View.VISIBLE : View.GONE);
         helper.setText(R.id.tvSeries, item.name);
 
         if (getData().size() == 1 && helper.getLayoutPosition() == 0) {
