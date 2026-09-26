@@ -36,6 +36,7 @@ import com.github.tvbox.osc.util.FastClickCheckUtil;
 import com.github.tvbox.osc.util.HawkConfig;
 import com.github.tvbox.osc.util.ImgUtil;
 import com.github.tvbox.osc.util.LOG;
+import com.github.tvbox.osc.util.TmdbHelper;
 import com.github.tvbox.osc.viewmodel.SourceViewModel;
 import com.orhanobut.hawk.Hawk;
 import com.owen.tvrecyclerview.widget.TvRecyclerView;
@@ -415,6 +416,7 @@ public class GridFragment extends BaseLazyFragment {
                         isLoad = true;
                         hasActionItems = hasActionVideo(absXml.movie.videoList);
                         gridAdapter.setNewData(absXml.movie.videoList);
+                        prefetchMeta(absXml.movie.videoList);
                         notifyHero(0);
                     } else {
                         hasActionItems = hasActionItems || hasActionVideo(absXml.movie.videoList);
@@ -464,6 +466,17 @@ public class GridFragment extends BaseLazyFragment {
         if (position < 0 || position >= gridAdapter.getData().size()) return;
         if (getActivity() instanceof HomeActivity) {
             ((HomeActivity) getActivity()).updateHero(gridAdapter.getData().get(position));
+        }
+    }
+
+    private void prefetchMeta(List<Movie.Video> videoList) {
+        if (videoList == null) return;
+        int limit = Math.min(videoList.size(), 6);
+        for (int i = 0; i < limit; i++) {
+            Movie.Video video = videoList.get(i);
+            if (video != null) {
+                TmdbHelper.prefetch(video.name, video.year);
+            }
         }
     }
 

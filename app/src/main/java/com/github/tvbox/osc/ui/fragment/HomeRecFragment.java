@@ -14,6 +14,7 @@ import com.github.tvbox.osc.ui.activity.FastSearchActivity;
 import com.github.tvbox.osc.ui.activity.HomeActivity;
 import com.github.tvbox.osc.ui.adapter.GridAdapter;
 import com.github.tvbox.osc.util.FastClickCheckUtil;
+import com.github.tvbox.osc.util.TmdbHelper;
 import com.owen.tvrecyclerview.widget.TvRecyclerView;
 import com.owen.tvrecyclerview.widget.V7LinearLayoutManager;
 
@@ -112,7 +113,19 @@ public class HomeRecFragment extends BaseLazyFragment {
             mGridView.setVisibility(empty ? View.GONE : View.VISIBLE);
         }
         if (!empty) {
+            prefetchMeta(videoList);
             notifyHero(0);
+        }
+    }
+
+    private void prefetchMeta(List<Movie.Video> videoList) {
+        if (videoList == null) return;
+        int limit = Math.min(videoList.size(), 6);
+        for (int i = 0; i < limit; i++) {
+            Movie.Video video = videoList.get(i);
+            if (video != null) {
+                TmdbHelper.prefetch(video.name, video.year);
+            }
         }
     }
 

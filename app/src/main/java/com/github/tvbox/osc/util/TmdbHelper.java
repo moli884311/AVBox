@@ -2,6 +2,7 @@ package com.github.tvbox.osc.util;
 
 import android.text.TextUtils;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -29,6 +30,9 @@ public class TmdbHelper {
     private static final String IMG_ROOT = "https://tvbox.moliys.icu/tmdbimg.php?path=";
 
     private static final Map<String, Meta> CACHE = new HashMap<>();
+    /** 磁盘缓存前缀: 冷启动后首页大图/简介可直接命中, 避免每次进入首页都"慢半拍" */
+    private static final String DISK_PREFIX = "tmdb_meta_v1_";
+    private static final Gson GSON = new Gson();
 
     public static class Meta {
         public String backdrop;
@@ -92,6 +96,12 @@ public class TmdbHelper {
         }
         final String key = name + "#" + year;
         Meta cached = CACHE.get(key);
+        if (cached == null) {
+            cached = readDisk(key);
+            if (cached != null) {
+                CACHE.put(key, cached);
+            }
+        }
         if (cached != null) {
             callback.onResult(cached);
             return;
@@ -101,10 +111,41 @@ public class TmdbHelper {
             public void onResult(Meta meta) {
                 if (meta != null) {
                     CACHE.put(key, meta);
+                    writeDisk(key, meta);
                 }
                 callback.onResult(meta);
             }
         });
+    }
+
+    /**
+     * 预热元数据: 首页列表加载后提前拉取, 让焦点移动时大图/简介即时命中缓存。
+     */
+    public static void prefetch(final String name, final int year) {
+        loadMeta(name, year, new Callback() {
+            @Override
+            public void onResult(Meta meta) {
+            }
+        });
+    }
+
+    private static Meta readDisk(String key) {
+        try {
+            String json = Hawk.get(DISK_PREFIX + key, "");
+            if (TextUtils.isEmpty(json)) {
+                return null;
+            }
+            return GSON.fromJson(json, Meta.class);
+        } catch (Throwable th) {
+            return null;
+        }
+    }
+
+    private static void writeDisk(String key, Meta meta) {
+        try {
+            Hawk.put(DISK_PREFIX + key, GSON.toJson(meta));
+        } catch (Throwable ignored) {
+        }
     }
 
     private static void search(final String name, final int year, final boolean tryMovie, final Callback callback) {
