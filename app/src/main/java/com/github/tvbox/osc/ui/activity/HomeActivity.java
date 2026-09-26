@@ -568,9 +568,32 @@ public class HomeActivity extends BaseActivity {
             } catch (Exception e) {
             }
             mViewPager.setPageTransformer(true, new DefaultTransformer());
+            mViewPager.setOffscreenPageLimit(1);
             mViewPager.setAdapter(pageAdapter);
-            mViewPager.setCurrentItem(currentSelected, false);
+            selectPage(currentSelected);
         }
+    }
+
+    private void selectPage(int position) {
+        if (mViewPager == null || pageAdapter == null) return;
+        final int count = pageAdapter.getCount();
+        if (count <= 0) return;
+        int p = position;
+        if (p < 0) p = 0;
+        if (p >= count) p = count - 1;
+        currentSelected = p;
+        final int target = p;
+        mViewPager.post(new Runnable() {
+            @Override
+            public void run() {
+                if (mViewPager.getWidth() <= 0) return;
+                int jump = target == count - 1 ? target - 1 : target + 1;
+                if (jump >= 0 && jump < count && jump != target) {
+                    mViewPager.setCurrentItem(jump, false);
+                }
+                mViewPager.setCurrentItem(target, false);
+            }
+        });
     }
 
     private void clearHomePages() {
@@ -738,8 +761,7 @@ public class HomeActivity extends BaseActivity {
                 sortChange = false;
                 BaseLazyFragment baseLazyFragment = fragments.get(sortFocused);
                 if (sortFocused != currentSelected) {
-                    currentSelected = sortFocused;
-                    mViewPager.setCurrentItem(sortFocused, false);
+                    selectPage(sortFocused);
                     if (baseLazyFragment instanceof GridFragment && ((GridFragment) baseLazyFragment).shouldReloadOnSelect()) {
                         ((GridFragment) baseLazyFragment).forceRefresh();
                     }

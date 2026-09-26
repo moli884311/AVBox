@@ -1,5 +1,8 @@
 package com.github.tvbox.osc.ui.adapter;
 
+import android.view.View;
+import android.view.ViewGroup;
+
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentPagerAdapter;
@@ -61,5 +64,33 @@ public class HomePageAdapter extends FragmentPagerAdapter {
     @Override
     public int getCount() {
         return list != null ? list.size() : 0;
+    }
+
+    @Override
+    public void setPrimaryItem(ViewGroup container, int position, Object object) {
+        super.setPrimaryItem(container, position, object);
+        final Fragment fragment = (Fragment) object;
+        if (fragment == null) return;
+        final View primaryView = fragment.getView();
+        if (primaryView != null) {
+            syncPageVisibility(container, primaryView);
+        } else {
+            container.post(new Runnable() {
+                @Override
+                public void run() {
+                    View view = fragment.getView();
+                    if (view != null) {
+                        syncPageVisibility(container, view);
+                    }
+                }
+            });
+        }
+    }
+
+    private void syncPageVisibility(ViewGroup container, View primaryView) {
+        for (int i = 0; i < container.getChildCount(); i++) {
+            View child = container.getChildAt(i);
+            child.setVisibility(child == primaryView ? View.VISIBLE : View.INVISIBLE);
+        }
     }
 }
