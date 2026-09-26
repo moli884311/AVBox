@@ -133,18 +133,6 @@ public class SourceViewModel extends ViewModel {
         sortCache.remove(sourceKey);
     }
 
-    /**
-     * 读取首页缓存中的推荐影片列表(供搜索页"精选推荐"等复用, 不额外发起请求)。
-     */
-    public static List<Movie.Video> peekHomeRecVideos(String sourceKey) {
-        if (TextUtils.isEmpty(sourceKey)) return null;
-        AbsSortXml cached = sortCache.get(sourceKey);
-        if (cached == null || cached.videoList == null || cached.videoList.isEmpty()) {
-            return null;
-        }
-        return new ArrayList<>(cached.videoList);
-    }
-
     public static void clearRuntimeCache() {
         sortCache.clear();
         extendCache.clear();

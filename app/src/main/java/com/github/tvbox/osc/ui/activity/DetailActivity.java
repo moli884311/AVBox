@@ -590,11 +590,13 @@ public class DetailActivity extends BaseActivity {
             }
         });
 
-        if(showPreview){
-            llPlayerFragmentContainerBlock.requestFocus();
-        }else {
-            tvPlay.requestFocus();
-        }
+        final View detailInitialFocus = tvPlay;
+        detailInitialFocus.post(new Runnable() {
+            @Override
+            public void run() {
+                detailInitialFocus.requestFocus();
+            }
+        });
         setLoadSir(llLayout);
         if (fullWindows) {
             setFullPreview(true);

@@ -99,9 +99,9 @@ public class SearchActivity extends BaseActivity {
     };
     private LinearLayout llLayout;
     private LinearLayout llRecommend;
+    private View recommendScroll;
     private TvRecyclerView mGridView;
     private TvRecyclerView mGridViewWord;
-    private TvRecyclerView featuredGrid;
     private TvRecyclerView hotPlayGrid;
     SourceViewModel sourceViewModel;
     private RemoteDialog remoteDialog;
@@ -111,7 +111,6 @@ public class SearchActivity extends BaseActivity {
     private TextView tvRemoteSearch;
     private SearchKeyboard keyboard;
     private SearchAdapter searchAdapter;
-    private SearchPosterAdapter featuredAdapter;
     private SearchPosterAdapter hotPlayAdapter;
     private PinyinAdapter wordAdapter;
     private PinyinAdapter hotWordAdapter;
@@ -178,6 +177,7 @@ public class SearchActivity extends BaseActivity {
         EventBus.getDefault().register(this);
         llLayout = findViewById(R.id.llLayout);
         llRecommend = findViewById(R.id.llRecommend);
+        recommendScroll = findViewById(R.id.recommendScroll);
         etSearch = findViewById(R.id.etSearch);
         tvSearch = findViewById(R.id.tvSearch);
         tvRemoteSearch = findViewById(R.id.tvRemoteSearch);
@@ -186,9 +186,10 @@ public class SearchActivity extends BaseActivity {
         mGridView = findViewById(R.id.mGridView);
         keyboard = findViewById(R.id.keyBoardRoot);
         mGridViewWord = findViewById(R.id.mGridViewWord);
-        featuredGrid = findViewById(R.id.featuredGrid);
         hotPlayGrid = findViewById(R.id.hotPlayGrid);
-        mGridViewWord.setHasFixedSize(true);
+        mGridViewWord.setHasFixedSize(false);
+        mGridViewWord.setNestedScrollingEnabled(false);
+        hotPlayGrid.setNestedScrollingEnabled(false);
         wordAdapter = new PinyinAdapter();
         hotWordAdapter = new PinyinAdapter();
         wordsSwitch = findViewById(R.id.wordSwitch);
@@ -432,6 +433,7 @@ public class SearchActivity extends BaseActivity {
         aggregateSearchModeInited = true;
         aggregateSearchMode = aggregateMode;
         if (aggregateSearchMode) {
+            recommendScroll.setVisibility(View.VISIBLE);
             llRecommend.setVisibility(View.VISIBLE);
             llLayout.setVisibility(View.GONE);
             mGridView.setVisibility(View.GONE);
@@ -442,6 +444,7 @@ public class SearchActivity extends BaseActivity {
             mGridViewWord.setAdapter(hotWordAdapter);
             showRecommend();
         } else {
+            recommendScroll.setVisibility(View.GONE);
             llRecommend.setVisibility(View.GONE);
             llLayout.setVisibility(View.VISIBLE);
             if (mGridView.getVisibility() == View.GONE) {
@@ -464,17 +467,6 @@ public class SearchActivity extends BaseActivity {
     }
 
     private void initRecommendViews() {
-        featuredGrid.setHasFixedSize(true);
-        featuredGrid.setLayoutManager(new V7LinearLayoutManager(this.mContext, 0, false));
-        featuredAdapter = new SearchPosterAdapter();
-        featuredGrid.setAdapter(featuredAdapter);
-        featuredAdapter.setOnItemClickListener(new BaseQuickAdapter.OnItemClickListener() {
-            @Override
-            public void onItemClick(BaseQuickAdapter adapter, View view, int position) {
-                FastClickCheckUtil.check(view);
-                openRecommendVideo(featuredAdapter.getItem(position));
-            }
-        });
         hotPlayGrid.setHasFixedSize(true);
         hotPlayGrid.setLayoutManager(new V7LinearLayoutManager(this.mContext, 0, false));
         hotPlayAdapter = new SearchPosterAdapter();
@@ -502,6 +494,7 @@ public class SearchActivity extends BaseActivity {
 
     private void showRecommend() {
         if (!aggregateSearchMode) return;
+        if (recommendScroll != null) recommendScroll.setVisibility(View.VISIBLE);
         llRecommend.setVisibility(View.VISIBLE);
         llLayout.setVisibility(View.GONE);
         mGridView.setVisibility(View.GONE);
@@ -514,7 +507,6 @@ public class SearchActivity extends BaseActivity {
         if (!words.isEmpty()) {
             setHotWordsData(words);
         }
-        loadFeaturedVideos();
         loadHotPlayVideos();
     }
 
@@ -563,21 +555,6 @@ public class SearchActivity extends BaseActivity {
             }
         }
         setHotWordsData(words);
-    }
-
-    private void loadFeaturedVideos() {
-        if (featuredAdapter == null) return;
-        SourceBean home = ApiConfig.get().getHomeSourceBean();
-        String key = home == null ? null : home.getKey();
-        List<Movie.Video> videos = SourceViewModel.peekHomeRecVideos(key);
-        if (videos == null || videos.isEmpty()) {
-            featuredAdapter.setNewData(new ArrayList<Movie.Video>());
-            return;
-        }
-        if (videos.size() > 12) {
-            videos = new ArrayList<>(videos.subList(0, 12));
-        }
-        featuredAdapter.setNewData(new ArrayList<>(videos));
     }
 
     private void loadHotPlayVideos() {
@@ -744,7 +721,6 @@ public class SearchActivity extends BaseActivity {
         if(hots!=null && !hots.isEmpty()){
             setHotWordsData(buildChipWords());
             loadHotPlayVideos();
-            loadFeaturedVideos();
             return;
         }
         if (hotWordsRequested) {
@@ -783,7 +759,6 @@ public class SearchActivity extends BaseActivity {
                             }
                             cachedHotPlayVideos = hotPlay;
                             hotPlayAdapter.setNewData(new ArrayList<>(hotPlay));
-                            loadFeaturedVideos();
                             if (data.isEmpty()) {
                                 useDefaultHotWords();
                                 return;
