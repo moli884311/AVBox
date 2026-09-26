@@ -24,7 +24,7 @@ public class TmdbHelper {
     public static final String DEFAULT_TOKEN = "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyMTJiOGM1ZmM5ZTk0ZDgxOWQ0NDdkZDdlZmZmZjQyYyIsIm5iZiI6MTc4MjM5OTM0OS45MzEsInN1YiI6IjZhM2Q0MTc1MjVlNDBkYjczMzQ5ODgzYyIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.djxGx7TotRilNE6tT_BXY5J7AFeXLcfhWixwiK2g4sw";
     public static final String DEFAULT_API_KEY = "212b8c5fc9e94d819d447dd7effff42c";
 
-    private static final String API_ROOT = "https://api.themoviedb.org/3/";
+    private static final String API_ROOT = "https://api.tmdb.org/3/";
     private static final String IMG_ROOT = "https://image.tmdb.org/t/p/";
 
     private static final Map<String, Meta> CACHE = new HashMap<>();
