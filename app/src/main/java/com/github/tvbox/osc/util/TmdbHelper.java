@@ -134,7 +134,7 @@ public class TmdbHelper {
                             if (matched) {
                                 long id = first.has("id") ? first.get("id").getAsLong() : 0;
                                 Meta meta = new Meta();
-                                meta.backdrop = imageUrl(opt(first, "backdrop_path"), "w1280");
+                                meta.backdrop = imageUrl(opt(first, "backdrop_path"), "original");
                                 meta.poster = imageUrl(opt(first, "poster_path"), "w500");
                                 meta.overview = opt(first, "overview");
                                 loadCredits(tryMovie ? "movie" : "tv", id, meta, callback);
@@ -215,7 +215,7 @@ public class TmdbHelper {
                                 meta.overview = opt(root, "overview");
                             }
                             if (TextUtils.isEmpty(meta.backdrop)) {
-                                meta.backdrop = imageUrl(opt(root, "backdrop_path"), "w1280");
+                                meta.backdrop = imageUrl(opt(root, "backdrop_path"), "original");
                             }
                             if (TextUtils.isEmpty(meta.poster)) {
                                 meta.poster = imageUrl(opt(root, "poster_path"), "w500");

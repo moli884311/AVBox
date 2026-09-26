@@ -681,7 +681,7 @@
 			android:layout_width="90px"
 			android:layout_height="90px"
 			android:layout_marginLeft="10px"
-			android:src="@drawable/app_icon"
+			android:src="@drawable/icon_lingqi"
 			android:layout_alignParentTop="true"
 			android:layout_alignParentLeft="true"
 			android:layout_alignParentBottom="true" />
@@ -749,7 +749,7 @@
 			android:layout_alignParentRight="true"
 			android:layout_centerVertical="true"
 			android:layout_marginRight="@dimen/vs_10"
-			android:src="@drawable/app_icon" />
+			android:src="@drawable/icon_lingqi" />
 		<com.github.tvbox.osc.ui.tv.widget.MarqueeTextView
 			android:id="@+id/tv_right_top_channel_name"
 			android:layout_width="@dimen/vs_150"

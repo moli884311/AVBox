@@ -177,7 +177,7 @@
                     android:layout_marginTop="@dimen/vs_10"
                     android:ellipsize="end"
                     android:lineSpacingExtra="4mm"
-                    android:maxLines="2"
+                    android:maxLines="3"
                     android:maxWidth="@dimen/vs_760"
                     android:textColor="@color/cinema_text_secondary"
                     android:textSize="@dimen/ts_20" />

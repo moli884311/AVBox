@@ -987,7 +987,6 @@ public class HomeActivity extends BaseActivity {
 
     private void applyTmdbMeta(final Movie.Video video) {
         if (!TmdbHelper.isEnabled() || video == null) return;
-        final String localPic = video.pic == null ? "" : video.pic.trim();
         final String requestKey = (video.name == null ? "" : video.name) + "#" + video.year;
         heroTmdbKey = requestKey;
         TmdbHelper.loadMeta(video.name, video.year, new TmdbHelper.Callback() {
@@ -998,14 +997,13 @@ public class HomeActivity extends BaseActivity {
                     @Override
                     public void run() {
                         if (isActivityUnavailable() || !requestKey.equals(heroTmdbKey)) return;
-                        boolean enhanced = TmdbHelper.isEnhanced();
-                        if (enhanced && tmdbBackdropUsable(meta, localPic) && heroBackdrop != null) {
+                        if (tmdbBackdropUsable(meta) && heroBackdrop != null) {
                             ImgUtil.load(meta.backdrop, heroBackdrop, AutoSizeUtils.mm2px(HomeActivity.this, 1), 0, 0, video.name);
                         }
-                        if (tvHeroDesc != null && enhanced && !TextUtils.isEmpty(meta.overview)) {
+                        if (tvHeroDesc != null && !TextUtils.isEmpty(meta.overview)) {
                             tvHeroDesc.setText(meta.overview);
                         }
-                        if (tvHeroMeta != null && enhanced
+                        if (tvHeroMeta != null
                                 && (!TextUtils.isEmpty(meta.director) || !TextUtils.isEmpty(meta.actors))) {
                             StringBuilder wrapper = new StringBuilder();
                             if (!TextUtils.isEmpty(meta.director)) {
@@ -1023,9 +1021,8 @@ public class HomeActivity extends BaseActivity {
         });
     }
 
-    private boolean tmdbBackdropUsable(TmdbHelper.Meta meta, String localPic) {
-        if (meta == null || TextUtils.isEmpty(meta.backdrop)) return false;
-        return !TmdbHelper.isKeepSize() || TextUtils.isEmpty(localPic);
+    private boolean tmdbBackdropUsable(TmdbHelper.Meta meta) {
+        return meta != null && !TextUtils.isEmpty(meta.backdrop);
     }
 
     private void refreshHome(final boolean restart)
