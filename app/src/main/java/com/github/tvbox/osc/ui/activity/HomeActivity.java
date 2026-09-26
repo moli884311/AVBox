@@ -977,7 +977,7 @@ public class HomeActivity extends BaseActivity {
             tvHeroDesc.setText(desc);
         }
         if (heroBackdrop != null) {
-            String pic = video.pic == null ? "" : video.pic.trim();
+            String pic = heroPic(video);
             if (!TextUtils.isEmpty(pic)) {
                 ImgUtil.load(pic, heroBackdrop, AutoSizeUtils.mm2px(this, 1), 0, 0, video.name);
             }
@@ -998,7 +998,7 @@ public class HomeActivity extends BaseActivity {
                     public void run() {
                         if (isActivityUnavailable() || !requestKey.equals(heroTmdbKey)) return;
                         if (tmdbBackdropUsable(meta) && heroBackdrop != null) {
-                            ImgUtil.load(meta.backdrop, heroBackdrop, AutoSizeUtils.mm2px(HomeActivity.this, 1), 0, 0, video.name);
+                            ImgUtil.load(meta.backdrop, heroBackdrop, AutoSizeUtils.mm2px(HomeActivity.this, 1), 0, 0, video.name, heroPic(video));
                         }
                         if (tvHeroDesc != null && !TextUtils.isEmpty(meta.overview)) {
                             tvHeroDesc.setText(meta.overview);
@@ -1023,6 +1023,17 @@ public class HomeActivity extends BaseActivity {
 
     private boolean tmdbBackdropUsable(TmdbHelper.Meta meta) {
         return meta != null && !TextUtils.isEmpty(meta.backdrop);
+    }
+
+    /**
+     * 首页大图使用的封面: 将豆瓣低分辨率 s_ratio_poster 升级为 l 尺寸, 避免大图模糊。
+     */
+    private String heroPic(Movie.Video video) {
+        String pic = (video == null || video.pic == null) ? "" : video.pic.trim();
+        if (pic.contains("/s_ratio_poster/")) {
+            pic = pic.replace("/s_ratio_poster/", "/l/");
+        }
+        return pic;
     }
 
     private void refreshHome(final boolean restart)

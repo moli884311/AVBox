@@ -25,7 +25,8 @@ public class TmdbHelper {
     public static final String DEFAULT_API_KEY = "212b8c5fc9e94d819d447dd7effff42c";
 
     private static final String API_ROOT = "https://api.tmdb.org/3/";
-    private static final String IMG_ROOT = "https://image.tmdb.org/t/p/";
+    /** 图片经自有服务器转发, 解决国内 image.tmdb.org 不可达导致首页大图不清晰/占位的问题 */
+    private static final String IMG_ROOT = "https://tvbox.moliys.icu/tmdbimg.php?path=";
 
     private static final Map<String, Meta> CACHE = new HashMap<>();
 

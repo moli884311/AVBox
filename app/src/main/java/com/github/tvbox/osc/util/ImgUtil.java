@@ -162,6 +162,61 @@ public class ImgUtil {
                 .into(view);
     }
 
+    /**
+     * 带失败回退地址的加载: 主图加载失败时自动改加载 fallbackUrl, 避免留下占位图。
+     */
+    public static void load(final String url, final ImageView view, final int roundingRadius,
+                            final int newWidth, final int newHeight, final String label, final String fallbackUrl) {
+        view.setScaleType(ImageView.ScaleType.CENTER_CROP);
+        final int radius = roundingRadius <= 0 ? 1 : roundingRadius;
+        final Drawable fallback = createTextDrawable(TextUtils.isEmpty(label) ? "TVBox" : label, newWidth, newHeight, radius);
+        final Drawable placeholder = createImagePlaceholderDrawable(newWidth, newHeight, radius);
+        if (isInvalidImageUrl(url)) {
+            if (!TextUtils.isEmpty(fallbackUrl)) {
+                load(fallbackUrl, view, radius, newWidth, newHeight, label);
+            } else {
+                view.setImageDrawable(fallback);
+            }
+            return;
+        }
+        RequestOptions options = new RequestOptions()
+                .format(DecodeFormat.PREFER_RGB_565)
+                .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC)
+                .dontAnimate()
+                .transform(new CenterCrop(), new RoundedCorners(radius));
+        if (newWidth > 0 && newHeight > 0) {
+            options = options.override(newWidth, newHeight);
+        }
+        Glide.with(App.getInstance())
+                .asBitmap()
+                .load(getUrl(url))
+                .placeholder(placeholder)
+                .error(fallback)
+                .listener(new RequestListener<Bitmap>() {
+                    private boolean retried = false;
+
+                    @Override
+                    public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Bitmap> target, boolean isFirstResource) {
+                        if (!retried && !TextUtils.isEmpty(fallbackUrl) && !fallbackUrl.equals(url)) {
+                            retried = true;
+                            load(fallbackUrl, view, radius, newWidth, newHeight, label);
+                            return true;
+                        }
+                        view.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                        view.setImageDrawable(fallback);
+                        return true;
+                    }
+
+                    @Override
+                    public boolean onResourceReady(Bitmap resource, Object model, Target<Bitmap> target, DataSource dataSource, boolean isFirstResource) {
+                        view.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                        return false;
+                    }
+                })
+                .apply(options)
+                .into(view);
+    }
+
     public static void loadUrl(String url, ImageView view) {
         load(url, view, 10);
     }
